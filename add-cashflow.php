@@ -1,158 +1,105 @@
 <?php
-// add-cashflow.php (Versi Depresiasi Otomatis dari Proyek)
-
+// add-cashflow.php
 session_start();
 if (!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true) {
     header("location: login.php");
     exit;
 }
 $user_id = $_SESSION['user_id'];
-
 require_once "config.php";
 
 $project_id = isset($_GET['project_id']) ? trim($_GET['project_id']) : null;
-if (empty($project_id) || !ctype_digit($project_id)) {
-    header("location: home.php");
-    exit;
-}
+if (empty($project_id) || !ctype_digit($project_id)) { header("location: home.php"); exit; }
 
-// Ambil detail proyek (pajak dan nilai depresiasi tahunan)
 $project_details = null;
-$sql_project = "SELECT tax, depreciation FROM projects WHERE id = ? AND user_id = ?";
+$sql_project = "SELECT name, tax, invest_capital, investment_years, depreciation_method FROM projects WHERE id = ? AND user_id = ?";
 if ($stmt_project = $mysqli->prepare($sql_project)) {
     $stmt_project->bind_param("ii", $project_id, $user_id);
-    if ($stmt_project->execute()) {
-        $result = $stmt_project->get_result();
-        if ($result->num_rows == 1) {
-            $project_details = $result->fetch_assoc();
-        } else {
-            header("location: home.php");
-            exit;
-        }
-    }
+    if ($stmt_project->execute()) { $project_details = $stmt_project->get_result()->fetch_assoc(); }
     $stmt_project->close();
 }
+if(!$project_details) { header("location: home.php"); exit; }
 
-// Inisialisasi variabel input
 $year = $production = $price_per_barrel = $opex = "";
-$error_message = "";
 $validation_errors = [];
 
-// Logika saat form disubmit
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-
-    // Ambil data dari form
     $year = trim($_POST['year']);
     $production = trim($_POST['production']);
     $price_per_barrel = trim($_POST['price_per_barrel']);
     $opex = trim($_POST['opex']);
 
-    // Validasi input
-    if (empty($year) || !ctype_digit($year) || $year == 0) $validation_errors['year'] = "Tahun harus angka positif.";
-    if (empty($production) || !is_numeric($production)) $validation_errors['production'] = "Produksi harus angka.";
-    if (empty($price_per_barrel) || !is_numeric($price_per_barrel)) $validation_errors['price_per_barrel'] = "Harga per barel harus angka.";
-    if (empty($opex) || !is_numeric($opex)) $validation_errors['opex'] = "Opex harus angka.";
-
+    if(empty($year)) $validation_errors['year'] = "Tahun wajib diisi.";
+    if(empty($production)) $validation_errors['production'] = "Volume produksi wajib diisi.";
+    if(empty($price_per_barrel)) $validation_errors['price_per_barrel'] = "Harga per barel wajib diisi.";
+    if(empty($opex)) $validation_errors['opex'] = "OPEX wajib diisi.";
 
     if (empty($validation_errors)) {
-        // --- PERHITUNGAN OTOMATIS ---
-        $tax_percentage = $project_details['tax'];
-        // Ambil nilai depresiasi tahunan dari data proyek
-        $depreciation_usd = $project_details['depreciation'];
-
-        // 1. Hitung Income 
+        // Rumus Keekonomian Migas Terintegrasi
         $income = $production * $price_per_barrel;
+        
+        // Kalkulasi Depresiasi Otomatis Berdasarkan Pilihan Konfigurasi Proyek
+        if($project_details['depreciation_method'] == "Straight Line") {
+            $depreciation = $project_details['invest_capital'] / $project_details['investment_years'];
+        } else {
+            // Double Declining Balance Method (2 / N * Nilai Buku Sisa)
+            $depreciation = (2 / $project_details['investment_years']) * $project_details['invest_capital'];
+        }
 
-        // 2. Hitung Taxable Income
-        $taxable_income = $income - $opex - $depreciation_usd;
+        $taxable_income = $income - $opex - $depreciation;
+        if($taxable_income < 0) $taxable_income = 0; // Loss forward protection
 
-        // 3. Hitung Tax
-        $tax_amount = ($taxable_income > 0) ? $taxable_income * ($tax_percentage / 100) : 0;
+        $tax_paid = $taxable_income * ($project_details['tax'] / 100);
+        $net_cashflow = $income - $opex - $tax_paid;
 
-        // 4. Hitung NCF
-        $net_cashflow = $income - $opex - $tax_amount;
-
-        // Simpan ke database
-        $sql = "INSERT INTO cashflows (project_id, year, production, income, opex, taxable_income, net_cashflow, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())";
-
+        $sql = "INSERT INTO cashflows (year, production, income, opex, taxable_income, net_cashflow, project_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())";
         if ($stmt = $mysqli->prepare($sql)) {
-            // bind_param tipe data: i=integer, d=double/float
-            $stmt->bind_param("iididdd", $project_id, $year, $production, $income, $opex, $taxable_income, $net_cashflow);
-
+            $stmt->bind_param("iiddddi", $year, $production, $income, $opex, $taxable_income, $net_cashflow, $project_id);
             if ($stmt->execute()) {
-                header("Location: project-details.php?id=" . $project_id);
-                exit();
-            } else {
-                $error_message = "Gagal menambah data.";
+                header("location: project-details.php?id=" . $project_id);
+                exit;
             }
             $stmt->close();
         }
     }
-    $mysqli->close();
 }
 ?>
 <!DOCTYPE html>
 <html lang="id">
-
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tambah Data Cashflow Tahunan</title>
+    <title>Input Cashflow Tahunan - Petromine Analytics</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>body { font-family: 'Plus Jakarta Sans', sans-serif; }</style>
 </head>
-
-<body class="bg-gray-50">
-    <div class="flex h-screen">
-        <aside class="w-64 bg-white shadow-md flex flex-col">
-            <div class="p-6 text-center border-b">
-                <h2 class="text-xl font-bold text-blue-600">Kalkulator Migas</h2>
+<body class="bg-slate-950 text-slate-100 min-h-screen p-6">
+    <div class="max-w-xl mx-auto bg-slate-900 border border-slate-800 rounded-2xl p-8 shadow-2xl">
+        <h2 class="text-lg font-bold text-white mb-2">Cashflow</h2>
+        <p class="text-xs text-slate-400 mb-6">Proyek: <span class="text-emerald-400 font-semibold"><?php echo htmlspecialchars($project_details['name']); ?></span></p>
+        
+        <form action="" method="POST" class="space-y-4">
+            <div>
+                <label class="block text-xs font-bold text-slate-400 mb-2">Tahun Ke-</label>
+                <input type="number" name="year" placeholder="Contoh: 1" value="<?php echo htmlspecialchars($year); ?>" class="w-full p-3 bg-slate-950 border border-slate-800 rounded-xl text-sm text-white focus:outline-none">
             </div>
-            <nav class="flex-1 p-4 space-y-2"><a href="home.php" class="flex items-center px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg"><i class="fas fa-home mr-3"></i> Dashboard</a></nav>
-            <div class="p-4 border-t"><a href="logout.php" class="flex items-center px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg"><i class="fas fa-sign-out-alt mr-3"></i> Keluar</a></div>
-        </aside>
-        <main class="flex-1 p-8 overflow-y-auto">
-            <header class="mb-8">
-                <a href="project-details.php?id=<?php echo htmlspecialchars($project_id); ?>" class="text-blue-600 hover:text-blue-800 mb-4 inline-block"><i class="fas fa-arrow-left mr-2"></i>Kembali ke Detail Proyek</a>
-                <h1 class="text-3xl font-bold text-gray-800">Tambah Data Arus Kas Tahunan</h1>
-                <p class="text-gray-500">Depresiasi akan digunakan secara otomatis dari parameter proyek.</p>
-            </header>
-            <div class="max-w-4xl mx-auto bg-white p-8 rounded-xl shadow-lg">
-                <?php if (!empty($error_message)) {
-                    echo '<div class="bg-red-100 border-red-400 text-red-700 p-4 rounded-lg mb-6">' . $error_message . '</div>';
-                } ?>
-                <form action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']) . '?project_id=' . htmlspecialchars($project_id); ?>" method="POST" class="space-y-6">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label for="year" class="block text-sm font-medium text-gray-700">Tahun ke-</label>
-                            <input type="number" id="year" name="year" class="mt-1 w-full p-3 bg-gray-50 border rounded-lg" value="<?php echo htmlspecialchars($year); ?>">
-                            <span class="text-red-500 text-sm"><?php echo $validation_errors['year'] ?? ''; ?></span>
-                        </div>
-                        <div>
-                            <label for="production" class="block text-sm font-medium text-gray-700">Produksi (Mbbl)</label>
-                            <input type="number" id="production" name="production" class="mt-1 w-full p-3 bg-gray-50 border rounded-lg" value="<?php echo htmlspecialchars($production); ?>">
-                            <span class="text-red-500 text-sm"><?php echo $validation_errors['production'] ?? ''; ?></span>
-                        </div>
-                        <div>
-                            <label for="price_per_barrel" class="block text-sm font-medium text-gray-700">Harga per Barel (USD)</label>
-                            <input type="number" step="any" id="price_per_barrel" name="price_per_barrel" class="mt-1 w-full p-3 bg-gray-50 border rounded-lg" value="<?php echo htmlspecialchars($price_per_barrel); ?>">
-                            <span class="text-red-500 text-sm"><?php echo $validation_errors['price_per_barrel'] ?? ''; ?></span>
-                        </div>
-                        <div>
-                            <label for="opex" class="block text-sm font-medium text-gray-700">Opex (USD)</label>
-                            <input type="number" id="opex" name="opex" class="mt-1 w-full p-3 bg-gray-50 border rounded-lg" value="<?php echo htmlspecialchars($opex); ?>">
-                            <span class="text-red-500 text-sm"><?php echo $validation_errors['opex'] ?? ''; ?></span>
-                        </div>
-                    </div>
-                    <div class="flex justify-end pt-6">
-                        <a href="project-details.php?id=<?php echo htmlspecialchars($project_id); ?>" class="bg-gray-200 text-gray-700 font-bold py-3 px-6 rounded-lg mr-4">Batal</a>
-                        <button type="submit" class="bg-blue-600 text-white font-bold py-3 px-6 rounded-lg">Simpan & Hitung</button>
-                    </div>
-                </form>
+            <div>
+                <label class="block text-xs font-bold text-slate-400 mb-2">Volume Produksi Minyak Mentah (BBL / Tahun)</label>
+                <input type="number" name="production" placeholder="Contoh: 150000" value="<?php echo htmlspecialchars($production); ?>" class="w-full p-3 bg-slate-950 border border-slate-800 rounded-xl text-sm text-white focus:outline-none">
             </div>
-        </main>
+            <div>
+                <label class="block text-xs font-bold text-slate-400 mb-2">Harga Minyak Mentah (USD / BBL)</label>
+                <input type="number" step="any" name="price_per_barrel" placeholder="Contoh: 75.50" value="<?php echo htmlspecialchars($price_per_barrel); ?>" class="w-full p-3 bg-slate-950 border border-slate-800 rounded-xl text-sm text-white focus:outline-none">
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-slate-400 mb-2">Biaya Operasional Lapangan (OPEX - USD)</label>
+                <input type="number" name="opex" placeholder="Contoh: 2000000" value="<?php echo htmlspecialchars($opex); ?>" class="w-full p-3 bg-slate-950 border border-slate-800 rounded-xl text-sm text-white focus:outline-none">
+            </div>
+            <div class="flex justify-end gap-3 pt-4 border-t border-slate-800">
+                <a href="project-details.php?id=<?php echo $project_id; ?>" class="bg-slate-800 text-slate-300 py-2.5 px-5 rounded-xl text-xs font-bold">Batal</a>
+                <button type="submit" class="bg-emerald-500 text-slate-950 py-2.5 px-5 rounded-xl text-xs font-bold">Simpan & Hitung</button>
+            </div>
+        </form>
     </div>
 </body>
-
 </html>
