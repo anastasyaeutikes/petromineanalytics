@@ -91,7 +91,7 @@ if (isset($_SESSION["loggedin"]) && $_SESSION["loggedin"] === true) {
                     <i class="fas fa-file-invoice-dollar"></i>
                 </div>
                 <h3 class="text-sm font-bold text-white">Excel Synchronization</h3>
-                <p class="text-xs text-slate-400 leading-relaxed">Struktur pemodelan finansial laporan disesuaikan secara matematis persis dengan format komersial spreadsheet Excel.</p>
+                <p class="text-xs text-slate-400 leading-relaxed">Struktur pemodelan finansial laporan disesuaikan secara matematis dengan format komersial spreadsheet Excel.</p>
             </div>
         </div>
 
