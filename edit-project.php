@@ -20,7 +20,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     $sql = "UPDATE projects SET name=?, site_manager=?, invest_capital=?, invest_noncapital=?, tax=?, investment_years=?, depreciation_method=?, decline_rate=?, updated_at=NOW() WHERE id=? AND user_id=?";
     if ($stmt = $mysqli->prepare($sql)) {
-        $stmt->bind_param("ssddidssii", $name, $site_manager, $invest_capital, $invest_noncapital, $tax, $investment_years, $depreciation_method, $decline_rate, $project_id, $user_id);
+        $stmt->bind_param("ssddddssii", $name, $site_manager, $invest_capital, $invest_noncapital, $tax, $investment_years, $depreciation_method, $decline_rate, $project_id, $user_id);
         if ($stmt->execute()) { header("location: project-details.php?id=" . $project_id); exit; }
     }
 }

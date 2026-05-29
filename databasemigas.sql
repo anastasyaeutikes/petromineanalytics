@@ -49,7 +49,7 @@ CREATE TABLE `projects` (
   `invest_noncapital` int NOT NULL,
   `tax` double NOT NULL,
   `investment_years` int NOT NULL DEFAULT '7',
-  `depreciation` int NOT NULL,
+  `depreciation` int NOT NULL DEFAULT '0',
   `depreciation_method` varchar(50) NOT NULL DEFAULT 'Straight Line',
   `decline_rate` double NOT NULL DEFAULT '0',
   `user_id` bigint UNSIGNED NOT NULL,

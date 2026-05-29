@@ -31,9 +31,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if (!is_numeric($decline_rate)) $validation_errors['decline_rate'] = "Decline rate harus angka.";
 
     if (empty($validation_errors)) {
-        $sql = "INSERT INTO projects (name, site_manager, invest_capital, invest_noncapital, tax, investment_years, depreciation_method, decline_rate, user_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())";
+        $sql = "INSERT INTO projects (name, site_manager, invest_capital, invest_noncapital, tax, investment_years, depreciation, depreciation_method, decline_rate, user_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?, ?, NOW(), NOW())";
         if ($stmt = $mysqli->prepare($sql)) {
-            $stmt->bind_param("ssddidssi", $name, $site_manager, $invest_capital, $invest_noncapital, $tax, $investment_years, $depreciation_method, $decline_rate, $user_id);
+            $stmt->bind_param("ssddddssi", $name, $site_manager, $invest_capital, $invest_noncapital, $tax, $investment_years, $depreciation_method, $decline_rate, $user_id);
             if ($stmt->execute()) {
                 header("location: home.php");
                 exit;
