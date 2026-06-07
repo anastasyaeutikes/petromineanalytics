@@ -42,8 +42,8 @@ if(!$project) { header("location: home.php"); exit; }
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen p-6">
-    <div class="max-w-2xl mx-auto bg-slate-900 border border-slate-800 rounded-2xl p-8">
+<body class="bg-slate-950 text-slate-100 min-h-screen flex items-center justify-center p-6">
+    <div class="w-full max-w-2xl bg-slate-900 border border-slate-800 rounded-2xl p-8">
         <h2 class="text-lg font-bold mb-6">Ubah Parameter Lapangan Proyek</h2>
         <form action="" method="POST" class="space-y-4">
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
