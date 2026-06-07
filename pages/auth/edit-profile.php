@@ -134,15 +134,17 @@ $extra_head = "
 ";
 require_once "../../includes/header.php";
 ?>
-<body class="bg-slate-950 text-slate-100 min-h-screen">
-
-<?php
-$nav_back_url = "profile.php";
-$nav_back_label = "Profil";
-require_once "../../includes/navbar.php";
-?>
-
-<main class="max-w-xl mx-auto px-6 py-10">
+<body class="bg-slate-950 text-slate-100 min-h-screen flex">
+    <?php require_once "../../includes/sidebar.php"; ?>
+    <div class="flex-1 flex flex-col min-w-0">
+        <?php 
+        $breadcrumb_items = [
+            ['label' => 'Profil Saya', 'url' => 'profile.php'],
+            ['label' => 'Edit Profil']
+        ];
+        require_once "../../includes/topbar.php"; 
+        ?>
+        <main class="max-w-xl w-full mx-auto px-6 py-10 flex-grow">
 
     <div class="mb-7">
         <h1 class="text-2xl font-bold text-white tracking-tight">Edit Profil</h1>
@@ -264,7 +266,8 @@ require_once "../../includes/navbar.php";
             </button>
         </div>
     </form>
-</main>
+        </main>
+    </div>
 
 <!-- MODAL: Konfirmasi Hapus Foto -->
 <div id="delete-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm px-4">

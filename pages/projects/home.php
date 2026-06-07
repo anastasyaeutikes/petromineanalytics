@@ -43,9 +43,14 @@ $base_path = "../../";
 $page_title = "Dashboard Analisis Investasi";
 require_once "../../includes/header.php";
 ?>
-<body class="bg-slate-950 text-slate-100 min-h-screen">
-    <?php require_once "../../includes/navbar.php"; ?>
-    <main class="max-w-7xl mx-auto px-6 py-10">
+<body class="bg-slate-950 text-slate-100 min-h-screen flex">
+    <?php require_once "../../includes/sidebar.php"; ?>
+    <div class="flex-1 flex flex-col min-w-0">
+        <?php 
+        $breadcrumb_items = [];
+        require_once "../../includes/topbar.php"; 
+        ?>
+        <main class="max-w-7xl w-full mx-auto px-6 py-10 flex-grow">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
             <div><h1 class="text-2xl font-bold text-white tracking-tight">Manajemen Pengelolaan Lapangan Migas</h1><p class="text-xs text-slate-400 mt-1">Kelola simulasi PSC model fiskal dan indikator ekonomi makro.</p></div>
             <a href="create-project.php" class="bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold px-5 py-2.5 rounded-xl text-xs flex items-center gap-2 shadow-lg"><i class="fas fa-plus"></i> Tambah Proyek</a>
@@ -77,6 +82,7 @@ require_once "../../includes/header.php";
                 <?php endforeach; ?>
             </div>
         <?php endif; ?>
-    </main>
+        </main>
+    </div>
 </body>
 </html>

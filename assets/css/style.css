@@ -491,7 +491,6 @@ body {
 input[type="number"] {
   appearance: textfield;
   -moz-appearance: textfield;
-  color: #212529;
 }
 input[type="number"]::-webkit-inner-spin-button,
 input[type="number"]::-webkit-outer-spin-button {
@@ -680,4 +679,20 @@ input[type="number"]::-webkit-outer-spin-button {
     padding: 1.5rem;
     margin: 1rem;
   }
+}
+
+/* Styling for inputs inside dark mode pages to guarantee white text and nice autofill */
+body.bg-slate-950 input,
+body.bg-slate-950 select,
+body.bg-slate-950 textarea {
+  color: #ffffff !important;
+}
+
+body.bg-slate-950 input:-webkit-autofill,
+body.bg-slate-950 input:-webkit-autofill:hover, 
+body.bg-slate-950 input:-webkit-autofill:focus, 
+body.bg-slate-950 input:-webkit-autofill:active {
+  -webkit-text-fill-color: #ffffff !important;
+  -webkit-box-shadow: 0 0 0px 1000px #020617 inset !important;
+  transition: background-color 5000s ease-in-out 0s;
 }

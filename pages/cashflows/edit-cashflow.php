@@ -67,10 +67,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <?php
 $base_path = "../../";
 $page_title = "Edit Cashflow - " . htmlspecialchars($project_details['name'] ?? '');
-require_once "../../includes/header.php";
-?>
-<body class="bg-slate-950 text-slate-100 min-h-screen flex items-center justify-center p-6">
-    <div class="w-full max-w-xl bg-slate-900 border border-slate-800 rounded-2xl p-8 shadow-2xl">
+<body class="bg-slate-950 text-slate-100 min-h-screen flex">
+    <?php require_once "../../includes/sidebar.php"; ?>
+    <div class="flex-1 flex flex-col min-w-0">
+        <?php 
+        $breadcrumb_items = [
+            ['label' => $project_details['name'], 'url' => '../projects/project-details.php?id=' . $project_id],
+            ['label' => 'Edit Cashflow']
+        ];
+        require_once "../../includes/topbar.php"; 
+        ?>
+        <main class="max-w-xl w-full mx-auto px-6 py-10 flex-grow flex items-center justify-center">
+            <div class="w-full max-w-xl bg-slate-900 border border-slate-800 rounded-2xl p-8 shadow-2xl">
 
         <!-- Header -->
         <div class="mb-6">
@@ -156,6 +164,8 @@ require_once "../../includes/header.php";
             </div>
         </form>
 
+            </div>
+        </main>
     </div>
 </body>
 </html>

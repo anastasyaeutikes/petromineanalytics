@@ -40,15 +40,16 @@ $page_title = "Profil Saya";
 $extra_head = "<style>.stat-card { background: linear-gradient(135deg, rgba(16,185,129,.08) 0%, rgba(15,23,42,0) 100%); }</style>";
 require_once "../../includes/header.php";
 ?>
-<body class="bg-slate-950 text-slate-100 min-h-screen">
-
-<?php
-$nav_back_url = "../projects/home.php";
-$nav_back_label = "Dashboard";
-require_once "../../includes/navbar.php";
-?>
-
-<main class="max-w-4xl mx-auto px-6 py-10">
+<body class="bg-slate-950 text-slate-100 min-h-screen flex">
+    <?php require_once "../../includes/sidebar.php"; ?>
+    <div class="flex-1 flex flex-col min-w-0">
+        <?php 
+        $breadcrumb_items = [
+            ['label' => 'Profil Saya']
+        ];
+        require_once "../../includes/topbar.php"; 
+        ?>
+        <main class="max-w-4xl w-full mx-auto px-6 py-10 flex-grow">
 
     <div class="mb-7 flex items-center justify-between">
         <div>
@@ -143,7 +144,8 @@ require_once "../../includes/navbar.php";
         </div>
 
     </div>
-</main>
+        </main>
+    </div>
 
 <script>
 const realPw = "<?php echo addslashes($_SESSION['user_password'] ?? '(Silakan login kembali untuk melihat password)'); ?>";

@@ -204,8 +204,16 @@ $extra_head = "
 ";
 require_once "../../includes/header.php";
 ?>
-<body class="bg-slate-950 text-slate-100 min-h-screen">
-    <div class="max-w-7xl mx-auto space-y-6 p-6">
+<body class="bg-slate-950 text-slate-100 min-h-screen flex">
+    <?php require_once "../../includes/sidebar.php"; ?>
+    <div class="flex-1 flex flex-col min-w-0">
+        <?php 
+        $breadcrumb_items = [
+            ['label' => $project['name']]
+        ];
+        require_once "../../includes/topbar.php"; 
+        ?>
+        <main class="max-w-7xl w-full mx-auto space-y-6 p-6 flex-grow">
 
         <!-- Header -->
         <div class="flex justify-between items-center bg-slate-900 border border-slate-800 p-6 rounded-2xl">
@@ -656,7 +664,8 @@ require_once "../../includes/header.php";
             </div>
         </div>
 
-    </div><!-- end max-w-7xl -->
+        </main>
+    </div><!-- end max-w-7xl and flex-1 -->
 
     <script>
         // =====================================================================

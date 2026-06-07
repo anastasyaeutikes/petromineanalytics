@@ -44,8 +44,18 @@ $base_path = "../../";
 $page_title = "Konfigurasi Lapangan - " . htmlspecialchars($project['name'] ?? '');
 require_once "../../includes/header.php";
 ?>
-<body class="bg-slate-950 text-slate-100 min-h-screen flex items-center justify-center p-6">
-    <div class="w-full max-w-2xl bg-slate-900 border border-slate-800 rounded-2xl p-8">
+<body class="bg-slate-950 text-slate-100 min-h-screen flex">
+    <?php require_once "../../includes/sidebar.php"; ?>
+    <div class="flex-1 flex flex-col min-w-0">
+        <?php 
+        $breadcrumb_items = [
+            ['label' => $project['name'], 'url' => 'project-details.php?id=' . $project_id],
+            ['label' => 'Edit Parameter']
+        ];
+        require_once "../../includes/topbar.php"; 
+        ?>
+        <main class="max-w-4xl w-full mx-auto px-6 py-10 flex-grow flex items-center justify-center">
+            <div class="w-full max-w-2xl bg-slate-900 border border-slate-800 rounded-2xl p-8">
         <h2 class="text-lg font-bold mb-6">Ubah Parameter Lapangan Proyek</h2>
         <form action="" method="POST" class="space-y-4">
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -93,6 +103,8 @@ require_once "../../includes/header.php";
                 </div>
             </div>
         </form>
+            </div>
+        </main>
     </div>
 </body>
 </html>
