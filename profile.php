@@ -9,31 +9,12 @@ $user_id = $_SESSION['user_id'];
 
 require_once "config.php";
 
-$success_msg = "";
-$error_msg   = "";
-
-$available_roles = [
-    "Senior Oil & Gas Analyst",
-    "Junior Oil & Gas Analyst",
-    "Petroleum Engineer",
-    "Reservoir Engineer",
-    "Production Engineer",
-    "Drilling Engineer",
-    "Geologist",
-    "Geophysicist",
-    "HSE Engineer",
-    "Project Manager",
-    "Financial Analyst",
-    "Business Development Manager",
-];
-
 $user = [];
 $sql  = "SELECT id, name, email, password, role, profile_photo, created_at FROM users WHERE id = ?";
 if ($stmt = $mysqli->prepare($sql)) {
     $stmt->bind_param("i", $user_id);
     $stmt->execute();
-    $result = $stmt->get_result();
-    $user   = $result->fetch_assoc();
+    $user = $stmt->get_result()->fetch_assoc();
     $stmt->close();
 }
 
@@ -46,81 +27,15 @@ if ($stmt_p = $mysqli->prepare($sql_proj)) {
     $stmt_p->close();
 }
 
-if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['action']) && $_POST['action'] === 'delete_photo') {
-    if (!empty($user['profile_photo']) && file_exists($user['profile_photo'])) {
-        unlink($user['profile_photo']);
-    }
-    $sql_del = "UPDATE users SET profile_photo = NULL, updated_at = NOW() WHERE id = ?";
-    if ($stmt_del = $mysqli->prepare($sql_del)) {
-        $stmt_del->bind_param("i", $user_id);
-        $stmt_del->execute();
-        $stmt_del->close();
-    }
-    $user['profile_photo'] = null;
-    $success_msg = "Foto profil berhasil dihapus.";
-}
-
-if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['action']) && $_POST['action'] === 'update_profile') {
-    $new_name   = trim($_POST["name"] ?? "");
-    $new_role   = trim($_POST["role"] ?? "");
-    $photo_path = $user['profile_photo'];
-
-    if (empty($new_name)) {
-        $error_msg = "Nama tidak boleh kosong.";
-    } elseif (!in_array($new_role, $available_roles)) {
-        $error_msg = "Role tidak valid.";
-    } else {
-        if (!empty($_FILES["profile_photo"]["name"])) {
-            $allowed_types = ["image/jpeg", "image/png", "image/gif", "image/webp"];
-            $file_type     = mime_content_type($_FILES["profile_photo"]["tmp_name"]);
-
-            if (!in_array($file_type, $allowed_types)) {
-                $error_msg = "Format foto tidak didukung. Gunakan JPG, PNG, GIF, atau WEBP.";
-            } elseif ($_FILES["profile_photo"]["size"] > 2 * 1024 * 1024) {
-                $error_msg = "Ukuran foto maksimal 2MB.";
-            } else {
-                $upload_dir = "uploads/profile/";
-                if (!is_dir($upload_dir)) mkdir($upload_dir, 0755, true);
-                if (!empty($user['profile_photo']) && file_exists($user['profile_photo'])) {
-                    unlink($user['profile_photo']);
-                }
-                $ext       = strtolower(pathinfo($_FILES["profile_photo"]["name"], PATHINFO_EXTENSION));
-                $filename  = "user_" . $user_id . "_" . time() . "." . $ext;
-                $dest_path = $upload_dir . $filename;
-                if (move_uploaded_file($_FILES["profile_photo"]["tmp_name"], $dest_path)) {
-                    $photo_path = $dest_path;
-                } else {
-                    $error_msg = "Gagal mengupload foto. Periksa permission folder uploads/profile/.";
-                }
-            }
-        }
-
-        if (empty($error_msg)) {
-            $sql_upd = "UPDATE users SET name = ?, role = ?, profile_photo = ?, updated_at = NOW() WHERE id = ?";
-            if ($stmt_upd = $mysqli->prepare($sql_upd)) {
-                $stmt_upd->bind_param("sssi", $new_name, $new_role, $photo_path, $user_id);
-                if ($stmt_upd->execute()) {
-                    $_SESSION['user_name']  = $new_name;
-                    $_SESSION['user_role']  = $new_role;
-                    $user['name']           = $new_name;
-                    $user['role']           = $new_role;
-                    $user['profile_photo']  = $photo_path;
-                    $success_msg = "Profil berhasil diperbarui!";
-                } else {
-                    $error_msg = "Gagal memperbarui profil ke database.";
-                }
-                $stmt_upd->close();
-            }
-        }
-    }
-}
-
 $mysqli->close();
 
 $initials     = strtoupper(substr($user['name'] ?? 'U', 0, 2));
 $joined       = !empty($user['created_at']) ? date('d M Y', strtotime($user['created_at'])) : '-';
-$current_role = $user['role'] ?? $available_roles[0];
+$current_role = $user['role'] ?? '-';
 $has_photo    = !empty($user['profile_photo']) && file_exists($user['profile_photo']);
+
+$success_msg = $_SESSION['success_msg'] ?? '';
+unset($_SESSION['success_msg']);
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -133,22 +48,10 @@ $has_photo    = !empty($user['profile_photo']) && file_exists($user['profile_pho
     <style>
         body { font-family: 'Plus Jakarta Sans', sans-serif; }
         .stat-card { background: linear-gradient(135deg, rgba(16,185,129,.08) 0%, rgba(15,23,42,0) 100%); }
-        select.custom-select {
-            appearance: none;
-            -webkit-appearance: none;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: right 14px center;
-        }
-        select.custom-select option { background-color: #0f172a; color: #e2e8f0; }
-        input[type="file"] { display: none; }
-        .photo-overlay { opacity: 0; transition: opacity .2s ease; }
-        .photo-wrapper:hover .photo-overlay { opacity: 1; }
     </style>
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen">
 
-<!-- ═══ NAVBAR ═══════════════════════════════════════════════════════════════ -->
 <nav class="border-b border-slate-800 bg-slate-900/50 backdrop-blur sticky top-0 z-50 px-6 py-4 flex justify-between items-center">
     <div class="flex items-center gap-3">
         <div class="w-9 h-9 bg-emerald-500 rounded-xl flex items-center justify-center text-slate-950 font-black">
@@ -166,273 +69,119 @@ $has_photo    = !empty($user['profile_photo']) && file_exists($user['profile_pho
     </div>
 </nav>
 
-<!-- ═══ MAIN ══════════════════════════════════════════════════════════════════ -->
-<main class="max-w-6xl mx-auto px-6 py-8">
+<main class="max-w-4xl mx-auto px-6 py-10">
 
-    <!-- Header -->
-    <div class="mb-6">
-        <h1 class="text-2xl font-bold text-white tracking-tight">Profil Saya</h1>
-        <p class="text-xs text-slate-500 mt-1">Kelola informasi akun Anda.</p>
+    <div class="mb-7 flex items-center justify-between">
+        <div>
+            <h1 class="text-2xl font-bold text-white tracking-tight">Profil Saya</h1>
+            <p class="text-xs text-slate-500 mt-1">Informasi akun Anda.</p>
+        </div>
+        <a href="edit-profile.php"
+           class="inline-flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 text-slate-950 font-bold px-5 py-2.5 rounded-xl text-xs shadow-lg transition-all">
+            <i class="fas fa-pen"></i> Edit Profile
+        </a>
     </div>
 
-    <!-- Alerts -->
     <?php if (!empty($success_msg)): ?>
-    <div class="mb-5 flex items-center gap-3 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-semibold px-4 py-3 rounded-xl">
+    <div id="flash-msg" class="mb-6 flex items-center gap-3 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-semibold px-4 py-3 rounded-xl">
         <i class="fas fa-check-circle text-base"></i> <?php echo htmlspecialchars($success_msg); ?>
     </div>
+    <script>setTimeout(() => { const el = document.getElementById('flash-msg'); if(el) el.style.display='none'; }, 4000);</script>
     <?php endif; ?>
-    <?php if (!empty($error_msg)): ?>
-    <div class="mb-5 flex items-center gap-3 bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-semibold px-4 py-3 rounded-xl">
-        <i class="fas fa-exclamation-circle text-base"></i> <?php echo htmlspecialchars($error_msg); ?>
+
+    <!-- Two-column, equal height -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-5" style="align-items: stretch;">
+
+        <!-- KOLOM KIRI -->
+        <div class="flex flex-col gap-5">
+
+            <!-- Card: Avatar + Nama -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-7 flex flex-col items-center text-center gap-4">
+                <div class="w-24 h-24 rounded-full overflow-hidden bg-emerald-500/15 border-2 border-emerald-500/40 flex items-center justify-center flex-shrink-0"
+                     style="box-shadow: 0 0 0 5px rgba(16,185,129,0.10);">
+                    <?php if ($has_photo): ?>
+                        <img src="<?php echo htmlspecialchars($user['profile_photo']); ?>" class="w-full h-full object-cover" alt="Foto Profil">
+                    <?php else: ?>
+                        <span class="text-3xl font-black text-emerald-400"><?php echo $initials; ?></span>
+                    <?php endif; ?>
+                </div>
+                <div>
+                    <p class="text-lg font-bold text-white"><?php echo htmlspecialchars($user['name'] ?? '-'); ?></p>
+                    <p class="text-xs text-slate-500 mt-0.5"><?php echo htmlspecialchars($user['email'] ?? '-'); ?></p>
+                    <span class="inline-block mt-2 text-[10px] font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-md">
+                        <?php echo htmlspecialchars($current_role); ?>
+                    </span>
+                </div>
+            </div>
+
+            <!-- Card: Statistik (fill remaining height) -->
+            <div class="flex-1 grid grid-cols-2 gap-3">
+                <div class="stat-card bg-slate-900 border border-slate-800 rounded-2xl flex flex-col items-center justify-center py-6">
+                    <p class="text-3xl font-black text-emerald-400"><?php echo $total_projects; ?></p>
+                    <p class="text-[10px] text-slate-500 font-medium mt-1">Total Proyek</p>
+                </div>
+                <div class="stat-card bg-slate-900 border border-slate-800 rounded-2xl flex flex-col items-center justify-center py-6">
+                    <p class="text-sm font-bold text-slate-300"><?php echo $joined; ?></p>
+                    <p class="text-[10px] text-slate-500 font-medium mt-1">Bergabung</p>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- KOLOM KANAN: full height -->
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 flex flex-col">
+            <h2 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-5 flex items-center gap-2">
+                <i class="fas fa-id-card text-emerald-400"></i> Detail Akun
+            </h2>
+
+            <!-- Detail rows — distributed evenly -->
+            <div class="flex-1 flex flex-col justify-between">
+
+                <div class="py-3 border-b border-slate-800/80">
+                    <p class="text-[10px] text-slate-600 font-semibold uppercase tracking-wide mb-1">Nama Lengkap</p>
+                    <p class="text-sm font-semibold text-slate-200"><?php echo htmlspecialchars($user['name'] ?? '-'); ?></p>
+                </div>
+
+                <div class="py-3 border-b border-slate-800/80">
+                    <p class="text-[10px] text-slate-600 font-semibold uppercase tracking-wide mb-1">Role</p>
+                    <p class="text-sm font-semibold text-slate-200"><?php echo htmlspecialchars($current_role); ?></p>
+                </div>
+
+                <div class="py-3 border-b border-slate-800/80">
+                    <p class="text-[10px] text-slate-600 font-semibold uppercase tracking-wide mb-1">Email</p>
+                    <p class="text-sm font-semibold text-slate-200"><?php echo htmlspecialchars($user['email'] ?? '-'); ?></p>
+                </div>
+
+                <div class="py-3 border-b border-slate-800/80">
+                    <p class="text-[10px] text-slate-600 font-semibold uppercase tracking-wide mb-1">Password</p>
+                    <div class="flex items-center gap-2">
+                        <p id="pw-display" class="text-sm font-semibold text-slate-200 tracking-widest">••••••••••</p>
+                        <button type="button" onclick="togglePw()" class="text-slate-500 hover:text-emerald-400 transition-colors ml-1">
+                            <i id="pw-icon" class="fas fa-eye text-xs"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="py-3">
+                    <p class="text-[10px] text-slate-600 font-semibold uppercase tracking-wide mb-1">Bergabung Sejak</p>
+                    <p class="text-sm font-semibold text-slate-200"><?php echo $joined; ?></p>
+                </div>
+
+            </div>
+        </div>
+
     </div>
-    <?php endif; ?>
-
-    <!-- ── TWO-COLUMN LAYOUT ─────────────────────────────────────────────── -->
-    <form method="POST" enctype="multipart/form-data">
-        <input type="hidden" name="action" value="update_profile">
-
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
-
-            <!-- ══ KOLOM KIRI ══════════════════════════════════════════════ -->
-            <div class="flex flex-col gap-5">
-
-                <!-- CARD: Ringkasan Akun -->
-                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 flex justify-between items-center">
-                    <div class="flex-1 min-w-0">
-                        <p class="text-sm font-bold text-white truncate"><?php echo htmlspecialchars($user['name'] ?? '-'); ?></p>
-                        <p class="text-xs text-slate-500 truncate"><?php echo htmlspecialchars($user['email'] ?? '-'); ?></p>
-                        <span class="inline-block mt-1 text-[10px] font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-md">
-                            <?php echo htmlspecialchars($current_role); ?>
-                        </span>
-                    </div>
-                    <div class="flex gap-3 text-center flex-shrink-0">
-                        <div class="stat-card border border-slate-800 rounded-xl px-4 py-2.5">
-                            <p class="text-xl font-black text-emerald-400"><?php echo $total_projects; ?></p>
-                            <p class="text-[10px] text-slate-500 font-medium">Proyek</p>
-                        </div>
-                        <div class="stat-card border border-slate-800 rounded-xl px-4 py-2.5">
-                            <p class="text-xs font-bold text-slate-300"><?php echo $joined; ?></p>
-                            <p class="text-[10px] text-slate-500 font-medium">Bergabung</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- CARD: Foto Profil -->
-                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-                    <h2 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-5 flex items-center gap-2">
-                        <i class="fas fa-camera text-emerald-400"></i> Foto Profil
-                    </h2>
-                    <div class="flex items-center gap-5">
-                        <label for="profile_photo_input" class="photo-wrapper relative cursor-pointer flex-shrink-0">
-                            <div class="w-20 h-20 rounded-full overflow-hidden bg-emerald-500/15 border-2 border-emerald-500/40 flex items-center justify-center"
-                                 style="box-shadow: 0 0 0 4px rgba(16,185,129,0.10);">
-                                <?php if ($has_photo): ?>
-                                    <img id="photo-preview" src="<?php echo htmlspecialchars($user['profile_photo']); ?>" class="w-full h-full object-cover" alt="Foto Profil">
-                                <?php else: ?>
-                                    <img id="photo-preview" src="" alt="" class="w-full h-full object-cover hidden">
-                                    <span id="photo-initials" class="text-2xl font-black text-emerald-400"><?php echo $initials; ?></span>
-                                <?php endif; ?>
-                            </div>
-                            <div class="photo-overlay absolute inset-0 bg-slate-950/75 rounded-full flex flex-col items-center justify-center gap-0.5">
-                                <i class="fas fa-camera text-white text-sm"></i>
-                                <span class="text-[9px] text-white font-bold tracking-wide">edit</span>
-                            </div>
-                        </label>
-                        <input type="file" id="profile_photo_input" name="profile_photo"
-                            accept="image/jpeg,image/png,image/gif,image/webp"
-                            onchange="previewPhoto(this)">
-
-                        <div class="flex-1">
-                            <div class="flex flex-wrap gap-2 mb-2.5">
-                                <label for="profile_photo_input"
-                                    class="cursor-pointer inline-flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 text-xs font-semibold px-3 py-2 rounded-lg transition-all">
-                                    <i class="fas fa-upload text-emerald-400 text-[11px]"></i>
-                                    <?php echo $has_photo ? 'Edit Photo' : 'Upload Foto'; ?>
-                                </label>
-                                <?php if ($has_photo): ?>
-                                <button type="button" onclick="confirmDeletePhoto()"
-                                    class="inline-flex items-center gap-1.5 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-400 text-xs font-semibold px-3 py-2 rounded-lg transition-all">
-                                    <i class="fas fa-trash-alt text-[11px]"></i> Delete
-                                </button>
-                                <?php endif; ?>
-                            </div>
-                            <p class="text-[10px] text-slate-600">
-                                <i class="fas fa-info-circle mr-1"></i>Format: JPG, PNG, WEBP &bull; Maks. 2MB
-                            </p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Meta info + Tombol Aksi -->
-                <div class="grid grid-cols-2 gap-3">
-                    <div class="bg-slate-900 border border-slate-800 rounded-xl px-4 py-3">
-                        <p class="text-[10px] text-slate-600 font-semibold mb-0.5 uppercase tracking-wide">Bergabung Sejak</p>
-                        <p class="text-xs font-bold text-slate-300"><?php echo $joined; ?></p>
-                    </div>
-                    <div class="bg-slate-900 border border-slate-800 rounded-xl px-4 py-3">
-                        <p class="text-[10px] text-slate-600 font-semibold mb-0.5 uppercase tracking-wide">Total Proyek</p>
-                        <p class="text-xs font-bold text-emerald-400"><?php echo $total_projects; ?> Proyek Aktif</p>
-                    </div>
-                </div>
-
-                <!-- Tombol Simpan -->
-                <div class="flex justify-end gap-3">
-                    <a href="home.php" class="px-5 py-2.5 bg-slate-800 border border-slate-700 text-slate-300 hover:text-white font-semibold text-xs rounded-xl transition-all">
-                        Cancel
-                    </a>
-                    <button type="submit" class="bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 text-slate-950 font-bold px-6 py-2.5 rounded-xl text-xs flex items-center gap-2 shadow-lg transition-all">
-                        <i class="fas fa-save"></i> Save Changes
-                    </button>
-                </div>
-
-            </div><!-- /KOLOM KIRI -->
-
-            <!-- ══ KOLOM KANAN ═════════════════════════════════════════════ -->
-            <div class="flex flex-col gap-5">
-
-                <!-- CARD: Informasi Akun -->
-                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-                    <h2 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-5 flex items-center gap-2">
-                        <i class="fas fa-id-card text-emerald-400"></i> Account Information
-                    </h2>
-                    <div class="space-y-4">
-
-                        <!-- Nama -->
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-400 mb-1.5">
-                                Nama Lengkap <span class="text-emerald-500">*</span>
-                            </label>
-                            <input type="text" name="name"
-                                value="<?php echo htmlspecialchars($user['name'] ?? ''); ?>"
-                                class="w-full bg-slate-950/60 border border-slate-700 text-slate-100 text-sm rounded-xl px-4 py-2.5 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 transition-all placeholder-slate-600"
-                                placeholder="Masukkan nama lengkap" required>
-                        </div>
-
-                        <!-- Role -->
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-400 mb-1.5">
-                                Role <span class="text-emerald-500">*</span>
-                            </label>
-                            <select name="role"
-                                class="custom-select w-full bg-slate-950/60 border border-slate-700 text-slate-100 text-sm rounded-xl px-4 py-2.5 pr-10 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 transition-all cursor-pointer">
-                                <?php foreach ($available_roles as $role): ?>
-                                    <option value="<?php echo htmlspecialchars($role); ?>"
-                                        <?php echo ($current_role === $role) ? 'selected' : ''; ?>>
-                                        <?php echo htmlspecialchars($role); ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
-                            <p class="text-[10px] text-slate-600 mt-1.5">
-                                <i class="fas fa-info-circle mr-1"></i>Role ditampilkan di halaman dashboard dan profil.
-                            </p>
-                        </div>
-
-                        <!-- Email -->
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-400 mb-1.5">Email</label>
-                            <div class="relative">
-                                <input type="email"
-                                    value="<?php echo htmlspecialchars($user['email'] ?? ''); ?>"
-                                    class="w-full bg-slate-950/30 border border-slate-800 text-slate-500 text-sm rounded-xl px-4 py-2.5 pr-36 cursor-not-allowed"
-                                    readonly tabindex="-1">
-                                <span class="absolute right-3 top-1/2 -translate-y-1/2 text-[9px] text-slate-600 font-bold bg-slate-800 px-2 py-1 rounded tracking-wide whitespace-nowrap">TIDAK DAPAT DIUBAH</span>
-                            </div>
-                        </div>
-
-                        <!-- Password -->
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-400 mb-1.5">Password</label>
-                            <div class="relative">
-                                <input type="password" id="password-field"
-                                    value="<?php echo htmlspecialchars($user['password'] ?? ''); ?>"
-                                    class="w-full bg-slate-950/30 border border-slate-800 text-slate-400 text-sm rounded-xl px-4 py-2.5 pr-28 cursor-not-allowed tracking-widest"
-                                    readonly tabindex="-1">
-                                <div class="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
-                                    <button type="button" onclick="togglePassword()"
-                                        class="text-slate-500 hover:text-emerald-400 transition-colors w-6 h-6 flex items-center justify-center"
-                                        title="Tampilkan / Sembunyikan password">
-                                        <i id="toggle-pw-icon" class="fas fa-eye text-sm"></i>
-                                    </button>
-                                    <span class="text-[9px] text-slate-600 font-bold bg-slate-800 px-2 py-1 rounded tracking-wide">READ ONLY</span>
-                                </div>
-                            </div>
-                            <p class="text-[10px] text-slate-600 mt-1.5">
-                                <i class="fas fa-lock mr-1"></i>Password tidak dapat diubah di halaman ini.
-                            </p>
-                        </div>
-
-                    </div>
-                </div>
-
-            </div><!-- /KOLOM KANAN -->
-
-        </div><!-- /grid -->
-    </form>
-
 </main>
 
-<!-- ═══ MODAL KONFIRMASI HAPUS FOTO ══════════════════════════════════════════ -->
-<div id="delete-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm px-4">
-    <div class="bg-slate-900 border border-slate-700 rounded-2xl p-6 max-w-sm w-full shadow-2xl">
-        <div class="w-12 h-12 bg-rose-500/15 border border-rose-500/30 rounded-xl flex items-center justify-center mx-auto mb-4">
-            <i class="fas fa-trash-alt text-rose-400 text-lg"></i>
-        </div>
-        <h3 class="text-sm font-bold text-white text-center mb-1">Hapus Foto Profil?</h3>
-        <p class="text-xs text-slate-500 text-center mb-6">Foto Anda akan dihapus secara permanen dan tidak dapat dikembalikan.</p>
-        <div class="flex gap-3">
-            <button type="button" onclick="closeDeleteModal()"
-                class="flex-1 px-4 py-2.5 bg-slate-800 border border-slate-700 text-slate-300 hover:text-white font-semibold text-xs rounded-xl transition-all">
-                Batal
-            </button>
-            <form method="POST" class="flex-1">
-                <input type="hidden" name="action" value="delete_photo">
-                <button type="submit"
-                    class="w-full px-4 py-2.5 bg-rose-500 hover:bg-rose-600 text-white font-bold text-xs rounded-xl transition-all">
-                    <i class="fas fa-trash-alt mr-1.5"></i>Ya, Hapus
-                </button>
-            </form>
-        </div>
-    </div>
-</div>
-
 <script>
-    function previewPhoto(input) {
-        if (input.files && input.files[0]) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const preview  = document.getElementById('photo-preview');
-                const initials = document.getElementById('photo-initials');
-                preview.src = e.target.result;
-                preview.classList.remove('hidden');
-                if (initials) initials.classList.add('hidden');
-            };
-            reader.readAsDataURL(input.files[0]);
-        }
-    }
-
-    function togglePassword() {
-        const field = document.getElementById('password-field');
-        const icon  = document.getElementById('toggle-pw-icon');
-        if (field.type === 'password') {
-            field.type = 'text';
-            field.classList.remove('tracking-widest');
-            icon.classList.replace('fa-eye', 'fa-eye-slash');
-        } else {
-            field.type = 'password';
-            field.classList.add('tracking-widest');
-            icon.classList.replace('fa-eye-slash', 'fa-eye');
-        }
-    }
-
-    function confirmDeletePhoto() {
-        document.getElementById('delete-modal').classList.remove('hidden');
-    }
-    function closeDeleteModal() {
-        document.getElementById('delete-modal').classList.add('hidden');
-    }
-    document.getElementById('delete-modal').addEventListener('click', function(e) {
-        if (e.target === this) closeDeleteModal();
-    });
+const realPw = "<?php echo addslashes($user['password'] ?? ''); ?>";
+let shown = false;
+function togglePw() {
+    shown = !shown;
+    document.getElementById('pw-display').textContent = shown ? realPw : '••••••••••';
+    document.getElementById('pw-display').classList.toggle('tracking-widest', !shown);
+    document.getElementById('pw-icon').className = shown ? 'fas fa-eye-slash text-xs' : 'fas fa-eye text-xs';
+}
 </script>
 </body>
 </html>
