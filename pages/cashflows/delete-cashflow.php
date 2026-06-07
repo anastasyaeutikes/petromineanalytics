@@ -1,15 +1,8 @@
 <?php
 // delete-cashflow.php
-session_start();
-
-// 1. Proteksi Halaman: Pastikan user sudah login
-if (!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true) {
-    header("location: login.php");
-    exit;
-}
-
+require_once "../../includes/auth.php";
 $user_id = $_SESSION['user_id'];
-require_once "config.php";
+require_once "../../config/config.php";
 
 // 2. Ambil parameter dari URL
 $cashflow_id = isset($_GET['id']) ? trim($_GET['id']) : null;
@@ -35,9 +28,9 @@ $mysqli->close();
 
 // 5. Kembalikan user ke halaman detail proyek sebelumnya (otomatis me-refresh kalkulasi)
 if (!empty($project_id) && ctype_digit($project_id)) {
-    header("location: project-details.php?id=" . $project_id);
+    header("location: ../projects/project-details.php?id=" . $project_id);
 } else {
-    header("location: home.php");
+    header("location: ../projects/home.php");
 }
 exit;
 ?>

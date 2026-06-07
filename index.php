@@ -4,35 +4,21 @@ session_start();
 
 // Jika pengguna sudah login, langsung arahkan ke dashboard utama
 if (isset($_SESSION["loggedin"]) && $_SESSION["loggedin"] === true) {
-    header("location: home.php");
+    header("location: pages/projects/home.php");
     exit;
 }
+
+$base_path = "./";
+
+$page_title = "Petromine Analytics - Platform Keekonomian Migas";
+require_once "includes/header.php";
 ?>
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Petromine Analytics - Platform Keekonomian Migas</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>body { font-family: 'Plus Jakarta Sans', sans-serif; }</style>
-</head>
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between">
 
-    <nav class="border-b border-slate-800 bg-slate-900/50 backdrop-blur sticky top-0 z-50 px-6 py-4 flex justify-between items-center max-w-7xl mx-auto w-full rounded-b-xl">
-        <div class="flex items-center gap-3">
-            <div class="w-9 h-9 bg-emerald-500 rounded-xl flex items-center justify-center text-slate-950 font-black">
-                <i class="fas fa-oil-well"></i>
-            </div>
-            <span class="text-md font-bold text-white tracking-tight">Petromine <span class="text-emerald-400 font-normal">Analytics</span></span>
-        </div>
-        <div class="flex items-center gap-3">
-            <a href="login.php" class="px-4 py-2 text-xs font-bold text-slate-300 hover:text-white transition-all">Masuk</a>
-            <a href="register.php" class="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold rounded-xl text-xs transition-all shadow-md shadow-emerald-500/10">Daftar Akun</a>
-        </div>
-    </nav>
+    <?php
+    $nav_full_width = false;
+    require_once "includes/navbar.php";
+    ?>
 
     <main class="max-w-7xl mx-auto px-6 py-8 w-full flex-grow space-y-8">
         
@@ -51,10 +37,10 @@ if (isset($_SESSION["loggedin"]) && $_SESSION["loggedin"] === true) {
                     Simulasikan model fiskal terintegrasi, kelola data parameter keekonomian, serta kalkulasi nilai PSC Net Present Value (NPV) secara akurat dalam platform digital modern.
                 </p>
                 <div class="pt-4 flex flex-col sm:flex-row justify-center items-center gap-4">
-                    <a href="register.php" class="w-full sm:w-auto bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold px-6 py-3.5 rounded-xl text-xs flex items-center justify-center gap-2 shadow-lg transition-all">
+                    <a href="pages/auth/register.php" class="w-full sm:w-auto bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold px-6 py-3.5 rounded-xl text-xs flex items-center justify-center gap-2 shadow-lg transition-all">
                         Mulai Analisis Sekarang <i class="fas fa-arrow-right"></i>
                     </a>
-                    <a href="login.php" class="w-full sm:w-auto bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold px-6 py-3.5 rounded-xl text-xs flex items-center justify-center gap-2 transition-all">
+                    <a href="pages/auth/login.php" class="w-full sm:w-auto bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold px-6 py-3.5 rounded-xl text-xs flex items-center justify-center gap-2 transition-all">
                         <i class="fas fa-right-to-bracket"></i> Akses Console
                     </a>
                 </div>
@@ -97,9 +83,7 @@ if (isset($_SESSION["loggedin"]) && $_SESSION["loggedin"] === true) {
 
     </main>
 
-    <footer class="border-t border-slate-900 bg-slate-950/40 py-6 text-center text-[11px] text-slate-500">
-        <p>&copy; 2026 Petromine Analytics. All Rights Reserved. Enterprise Safety Architecture Certified.</p>
-    </footer>
+    <?php require_once "includes/footer.php"; ?>
 
 </body>
 </html>

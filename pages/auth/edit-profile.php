@@ -1,13 +1,9 @@
 <?php
 // edit_profile.php
-session_start();
-if (!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true) {
-    header("location: login.php");
-    exit;
-}
+require_once "../../includes/auth.php";
 $user_id = $_SESSION['user_id'];
 
-require_once "config.php";
+require_once "../../config/config.php";
 
 $error_msg = "";
 
@@ -35,10 +31,15 @@ if ($stmt = $mysqli->prepare($sql)) {
     $stmt->close();
 }
 
+// Adjust profile photo path for legacy uploads
+if (!empty($user['profile_photo']) && strpos($user['profile_photo'], 'uploads/') === 0 && strpos($user['profile_photo'], 'assets/') === false) {
+    $user['profile_photo'] = 'assets/' . $user['profile_photo'];
+}
+
 // ─── Handle: Hapus Foto ───────────────────────────────────────────────────────
 if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['action']) && $_POST['action'] === 'delete_photo') {
-    if (!empty($user['profile_photo']) && file_exists($user['profile_photo'])) {
-        unlink($user['profile_photo']);
+    if (!empty($user['profile_photo']) && file_exists('../../' . $user['profile_photo'])) {
+        unlink('../../' . $user['profile_photo']);
     }
     $sql_del = "UPDATE users SET profile_photo = NULL, updated_at = NOW() WHERE id = ?";
     if ($stmt_del = $mysqli->prepare($sql_del)) {
@@ -71,18 +72,18 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['action']) && $_POST['
             } elseif ($_FILES["profile_photo"]["size"] > 2 * 1024 * 1024) {
                 $error_msg = "Ukuran foto maksimal 2MB.";
             } else {
-                $upload_dir = "uploads/profile/";
+                $upload_dir = "../../assets/uploads/profile/";
                 if (!is_dir($upload_dir)) mkdir($upload_dir, 0755, true);
-                if (!empty($user['profile_photo']) && file_exists($user['profile_photo'])) {
-                    unlink($user['profile_photo']);
+                if (!empty($user['profile_photo']) && file_exists('../../' . $user['profile_photo'])) {
+                    unlink('../../' . $user['profile_photo']);
                 }
                 $ext       = strtolower(pathinfo($_FILES["profile_photo"]["name"], PATHINFO_EXTENSION));
                 $filename  = "user_" . $user_id . "_" . time() . "." . $ext;
                 $dest_path = $upload_dir . $filename;
                 if (move_uploaded_file($_FILES["profile_photo"]["tmp_name"], $dest_path)) {
-                    $photo_path = $dest_path;
+                    $photo_path = "assets/uploads/profile/" . $filename;
                 } else {
-                    $error_msg = "Gagal mengupload foto. Periksa permission folder uploads/profile/.";
+                    $error_msg = "Gagal mengupload foto. Periksa permission folder assets/uploads/profile/.";
                 }
             }
         }
@@ -111,49 +112,35 @@ $mysqli->close();
 
 $initials     = strtoupper(substr($user['name'] ?? 'U', 0, 2));
 $current_role = $user['role'] ?? $available_roles[0];
-$has_photo    = !empty($user['profile_photo']) && file_exists($user['profile_photo']);
+$has_photo    = !empty($user['profile_photo']) && file_exists('../../' . $user['profile_photo']);
 ?>
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <title>Edit Profil - Petromine Analytics</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<?php
+$base_path = "../../";
+$page_title = "Edit Profil";
+$extra_head = "
     <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; }
         select.custom-select {
             appearance: none;
             -webkit-appearance: none;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-image: url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E\");
             background-repeat: no-repeat;
             background-position: right 14px center;
         }
         select.custom-select option { background-color: #0f172a; color: #e2e8f0; }
-        input[type="file"] { display: none; }
+        input[type=\"file\"] { display: none; }
         .photo-overlay { opacity: 0; transition: opacity .2s ease; }
         .photo-wrapper:hover .photo-overlay { opacity: 1; }
     </style>
-</head>
+";
+require_once "../../includes/header.php";
+?>
 <body class="bg-slate-950 text-slate-100 min-h-screen">
 
-<nav class="border-b border-slate-800 bg-slate-900/50 backdrop-blur sticky top-0 z-50 px-6 py-4 flex justify-between items-center">
-    <div class="flex items-center gap-3">
-        <div class="w-9 h-9 bg-emerald-500 rounded-xl flex items-center justify-center text-slate-950 font-black">
-            <i class="fas fa-oil-well"></i>
-        </div>
-        <span class="text-md font-bold text-white tracking-tight">Petromine <span class="text-emerald-400 font-normal">Analytics</span></span>
-    </div>
-    <div class="flex items-center gap-3">
-        <a href="profile.php" class="px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-400 hover:text-emerald-400 transition-all text-xs font-semibold">
-            <i class="fas fa-arrow-left mr-1.5"></i>Profil
-        </a>
-        <a href="logout.php" class="px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-400 hover:text-rose-400 transition-all text-xs">
-            <i class="fas fa-power-off"></i>
-        </a>
-    </div>
-</nav>
+<?php
+$nav_back_url = "profile.php";
+$nav_back_label = "Profil";
+require_once "../../includes/navbar.php";
+?>
 
 <main class="max-w-xl mx-auto px-6 py-10">
 
@@ -179,7 +166,7 @@ $has_photo    = !empty($user['profile_photo']) && file_exists($user['profile_pho
                 <div class="w-20 h-20 rounded-full overflow-hidden bg-emerald-500/15 border-2 border-emerald-500/40 flex items-center justify-center"
                      style="box-shadow: 0 0 0 4px rgba(16,185,129,0.10);">
                     <?php if ($has_photo): ?>
-                        <img id="photo-preview" src="<?php echo htmlspecialchars($user['profile_photo']); ?>" class="w-full h-full object-cover" alt="Foto Profil">
+                        <img id="photo-preview" src="<?php echo htmlspecialchars('../../' . $user['profile_photo']); ?>" class="w-full h-full object-cover" alt="Foto Profil">
                     <?php else: ?>
                         <img id="photo-preview" src="" alt="" class="w-full h-full object-cover hidden">
                         <span id="photo-initials" class="text-2xl font-black text-emerald-400"><?php echo $initials; ?></span>

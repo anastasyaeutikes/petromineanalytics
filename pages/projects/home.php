@@ -1,16 +1,12 @@
 <?php
 // home.php
-session_start();
-if (!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true) {
-  header("location: login.php");
-  exit;
-}
+require_once "../../includes/auth.php";
 $user_id = $_SESSION['user_id'];
 $user_name = $_SESSION['user_name'];
 $user_photo = null;
 $user_role  = "Senior Oil & Gas Analyst";
 
-require_once "config.php";
+require_once "../../config/config.php";
 
 // Ambil data user
 $sql_user = "SELECT profile_photo, role FROM users WHERE id = ?";
@@ -20,14 +16,16 @@ if ($stmt_user = $mysqli->prepare($sql_user)) {
         $result_user = $stmt_user->get_result();
         if ($row_user = $result_user->fetch_assoc()) {
             $user_photo = $row_user['profile_photo'];
+            if (!empty($user_photo) && strpos($user_photo, 'uploads/') === 0 && strpos($user_photo, 'assets/') === false) {
+                $user_photo = 'assets/' . $user_photo;
+            }
             if (!empty($row_user['role'])) {
                 $user_role = $row_user['role'];
             }
         }
     }
     $stmt_user->close();
-}
-require_once "config.php"; 
+} 
 
 $projects = []; 
 $sql = "SELECT id, name, site_manager, invest_capital, investment_years, depreciation_method, decline_rate, created_at FROM projects WHERE user_id = ? ORDER BY created_at DESC";
@@ -41,63 +39,12 @@ if ($stmt = $mysqli->prepare($sql)) {
   $stmt->close();
 }
 $mysqli->close();
+$base_path = "../../";
+$page_title = "Dashboard Analisis Investasi";
+require_once "../../includes/header.php";
 ?>
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <title>Dashboard Analisis Investasi - Petromine Analytics</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>body { font-family: 'Plus Jakarta Sans', sans-serif; }</style>
-</head>
 <body class="bg-slate-950 text-slate-100 min-h-screen">
-    <nav class="border-b border-slate-800 bg-slate-900/50 backdrop-blur sticky top-0 z-50 px-6 py-4 flex justify-between items-center">
-        <div class="flex items-center gap-3">
-            <div class="w-9 h-9 bg-emerald-500 rounded-xl flex items-center justify-center text-slate-950 font-black"><i class="fas fa-oil-well"></i></div>
-            <span class="text-md font-bold text-white tracking-tight">Petromine <span class="text-emerald-400 font-normal">Analytics</span></span>
-        </div>
- <div class="flex items-center gap-4">
-
-    <a href="profile.php"
-       class="hidden sm:flex items-center gap-3 hover:opacity-90 transition-all group">
-
-        <?php if (!empty($user_photo) && file_exists($user_photo)): ?>
-
-            <img
-                src="<?php echo htmlspecialchars($user_photo); ?>"
-                alt="Profile"
-                class="w-10 h-10 rounded-full object-cover border-2 border-emerald-500"
-            >
-
-        <?php else: ?>
-
-            <div class="w-10 h-10 rounded-full bg-emerald-500 flex items-center justify-center text-slate-950 font-bold text-sm">
-                <?php echo strtoupper(substr($user_name, 0, 1)); ?>
-            </div>
-
-        <?php endif; ?>
-
-        <div class="text-left leading-tight">
-            <p class="text-xs font-bold text-slate-200 group-hover:text-emerald-400 transition-colors">
-                <?php echo htmlspecialchars($user_name); ?>
-            </p>
-
-            <p class="text-[10px] text-slate-500 font-medium">
-                <?php echo htmlspecialchars($user_role); ?>
-            </p>
-        </div>
-
-    </a>
-
-    <a href="logout.php"
-       class="px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-400 hover:text-rose-400 transition-all text-xs">
-        <i class="fas fa-power-off"></i>
-    </a>
-
-</div>
-    </nav>
+    <?php require_once "../../includes/navbar.php"; ?>
     <main class="max-w-7xl mx-auto px-6 py-10">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
             <div><h1 class="text-2xl font-bold text-white tracking-tight">Manajemen Pengelolaan Lapangan Migas</h1><p class="text-xs text-slate-400 mt-1">Kelola simulasi PSC model fiskal dan indikator ekonomi makro.</p></div>

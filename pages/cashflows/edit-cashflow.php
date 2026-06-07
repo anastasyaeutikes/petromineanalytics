@@ -1,12 +1,11 @@
 <?php
 // edit-cashflow.php
-session_start();
-if (!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true) { header("location: login.php"); exit; }
+require_once "../../includes/auth.php";
 $user_id = $_SESSION['user_id'];
-require_once "config.php";
+require_once "../../config/config.php";
 
 $cashflow_id = isset($_GET['id']) ? trim($_GET['id']) : null;
-if (empty($cashflow_id) || !ctype_digit($cashflow_id)) { header("location: home.php"); exit; }
+if (empty($cashflow_id) || !ctype_digit($cashflow_id)) { header("location: ../projects/home.php"); exit; }
 
 $cf = null;
 $sql_cf = "SELECT * FROM cashflows WHERE id = ?";
@@ -15,7 +14,7 @@ if ($stmt_cf = $mysqli->prepare($sql_cf)) {
     if ($stmt_cf->execute()) { $cf = $stmt_cf->get_result()->fetch_assoc(); }
     $stmt_cf->close();
 }
-if (!$cf) { header("location: home.php"); exit; }
+if (!$cf) { header("location: ../projects/home.php"); exit; }
 
 $project_id = $cf['project_id'];
 $project_details = null;
@@ -25,7 +24,7 @@ if ($stmt_project = $mysqli->prepare($sql_project)) {
     if ($stmt_project->execute()) { $project_details = $stmt_project->get_result()->fetch_assoc(); }
     $stmt_project->close();
 }
-if (!$project_details) { header("location: home.php"); exit; }
+if (!$project_details) { header("location: ../projects/home.php"); exit; }
 
 // Hitung harga per barel dari data yang tersimpan
 $price_per_barrel_value = ($cf['production'] > 0) ? ($cf['income'] / $cf['production']) : 0;
@@ -55,22 +54,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if ($stmt_up = $mysqli->prepare($sql_update)) {
         $stmt_up->bind_param("iddddi", $production, $income, $opex, $taxable_income, $net_cashflow, $cashflow_id);
         if ($stmt_up->execute()) {
-            header("location: project-details.php?id=" . $project_id);
+            header("location: ../projects/project-details.php?id=" . $project_id);
             exit;
         }
         $stmt_up->close();
     }
 }
 ?>
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <title>Edit Cashflow - Petromine Analytics</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>body { font-family: 'Plus Jakarta Sans', sans-serif; }</style>
-</head>
+<?php
+$base_path = "../../";
+$page_title = "Edit Cashflow - " . htmlspecialchars($project_details['name'] ?? '');
+require_once "../../includes/header.php";
+?>
 <body class="bg-slate-950 text-slate-100 min-h-screen flex items-center justify-center p-6">
     <div class="w-full max-w-xl bg-slate-900 border border-slate-800 rounded-2xl p-8 shadow-2xl">
 
@@ -149,7 +144,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             </div>
 
             <div class="flex justify-end gap-3 pt-4 border-t border-slate-800">
-                <a href="project-details.php?id=<?php echo $project_id; ?>" class="bg-slate-800 hover:bg-slate-700 text-slate-300 py-2.5 px-5 rounded-xl text-xs font-bold transition-colors">
+                <a href="../projects/project-details.php?id=<?php echo $project_id; ?>" class="bg-slate-800 hover:bg-slate-700 text-slate-300 py-2.5 px-5 rounded-xl text-xs font-bold transition-colors">
                     Batal
                 </a>
                 <button type="submit" class="bg-emerald-500 hover:bg-emerald-600 text-slate-950 py-2.5 px-5 rounded-xl text-xs font-bold transition-colors">

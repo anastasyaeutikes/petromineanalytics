@@ -1,12 +1,8 @@
 <?php
 // project-details.php (Versi Sinkronisasi Format Excel Keekonomian Migas dengan Fitur Aksi & Kolom Harga/Barel)
-session_start();
-if (!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true) {
-    header("location: login.php");
-    exit;
-}
+require_once "../../includes/auth.php";
 $user_id = $_SESSION['user_id'];
-require_once "config.php";
+require_once "../../config/config.php";
 
 $project_id = isset($_GET['id']) ? trim($_GET['id']) : null;
 if (empty($project_id) || !ctype_digit($project_id)) {
@@ -198,21 +194,18 @@ if ($pot_decimal !== null) {
 
 $mysqli->close();
 ?>
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <title>Analisis Keekonomian Proyek - Petromine Analytics</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<?php
+$base_path = "../../";
+$page_title = "Analisis Keekonomian Proyek - " . htmlspecialchars($project['name'] ?? '');
+$extra_head = "
+    <script src=\"https://cdn.jsdelivr.net/npm/chart.js\"></script>
     <!-- SheetJS untuk Export Excel di sisi klien -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <style>body { font-family: 'Plus Jakarta Sans', sans-serif; }</style>
-</head>
-<body class="bg-slate-950 text-slate-100 min-h-screen p-6">
-    <div class="max-w-7xl mx-auto space-y-6">
+    <script src=\"https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js\"></script>
+";
+require_once "../../includes/header.php";
+?>
+<body class="bg-slate-950 text-slate-100 min-h-screen">
+    <div class="max-w-7xl mx-auto space-y-6 p-6">
 
         <!-- Header -->
         <div class="flex justify-between items-center bg-slate-900 border border-slate-800 p-6 rounded-2xl">
@@ -223,7 +216,7 @@ $mysqli->close();
             </div>
             <div class="flex gap-3">
                 <a href="edit-project.php?id=<?php echo $project['id']; ?>" class="bg-slate-800 hover:bg-slate-700 px-4 py-2 text-xs font-bold rounded-xl border border-slate-700">Edit Parameter</a>
-                <a href="add-cashflow.php?project_id=<?php echo $project['id']; ?>" class="bg-emerald-500 hover:bg-emerald-600 text-slate-950 px-4 py-2 text-xs font-bold rounded-xl shadow-md">Input Data Tahunan</a>
+                <a href="../cashflows/add-cashflow.php?project_id=<?php echo $project['id']; ?>" class="bg-emerald-500 hover:bg-emerald-600 text-slate-950 px-4 py-2 text-xs font-bold rounded-xl shadow-md">Input Data Tahunan</a>
                 <!-- Tombol Export Excel -->
                 <button
                     onclick="exportToExcel()"
@@ -309,17 +302,17 @@ $mysqli->close();
                                 <td class="p-4 text-center">
                                     <?php if ($row['year'] > 0 && !empty($row['id'])): ?>
                                         <div class="flex items-center justify-center gap-2">
-                                            <a href="edit-cashflow.php?id=<?php echo $row['id']; ?>" class="text-blue-400 hover:text-blue-300 p-1" title="Edit Data Tahun <?php echo $row['year']; ?>">
+                                            <a href="../cashflows/edit-cashflow.php?id=<?php echo $row['id']; ?>" class="text-blue-400 hover:text-blue-300 p-1" title="Edit Data Tahun <?php echo $row['year']; ?>">
                                                 <i class="fas fa-edit"></i>
                                             </a>
-                                            <a href="delete-cashflow.php?id=<?php echo $row['id']; ?>&project_id=<?php echo $project_id; ?>"
+                                            <a href="../cashflows/delete-cashflow.php?id=<?php echo $row['id']; ?>&project_id=<?php echo $project_id; ?>"
                                                onclick="return confirm('Apakah Anda yakin ingin menghapus data cashflow Tahun <?php echo $row['year']; ?>?');"
                                                class="text-rose-400 hover:text-rose-300 p-1" title="Hapus Data Tahun <?php echo $row['year']; ?>">
                                                 <i class="fas fa-trash"></i>
                                             </a>
                                         </div>
                                     <?php elseif ($row['year'] > 0 && empty($row['id'])): ?>
-                                        <a href="add-cashflow.php?project_id=<?php echo $project_id; ?>&year=<?php echo $row['year']; ?>" class="text-emerald-500 hover:underline text-[10px]">
+                                        <a href="../cashflows/add-cashflow.php?project_id=<?php echo $project_id; ?>&year=<?php echo $row['year']; ?>" class="text-emerald-500 hover:underline text-[10px]">
                                             + Isi Data
                                         </a>
                                     <?php else: ?>

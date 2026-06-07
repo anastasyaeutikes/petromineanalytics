@@ -1,9 +1,8 @@
 <?php
 // edit-project.php
-session_start();
-if (!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true) { header("location: login.php"); exit; }
+require_once "../../includes/auth.php";
 $user_id = $_SESSION['user_id'];
-require_once "config.php";
+require_once "../../config/config.php";
 
 $project_id = isset($_GET['id']) ? trim($_GET['id']) : null;
 if (empty($project_id) || !ctype_digit($project_id)) { header("location: home.php"); exit; }
@@ -34,14 +33,11 @@ if ($stmt = $mysqli->prepare($sql)) {
 }
 if(!$project) { header("location: home.php"); exit; }
 ?>
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <title>Konfigurasi Lapangan - Petromine Analytics</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-</head>
+<?php
+$base_path = "../../";
+$page_title = "Konfigurasi Lapangan - " . htmlspecialchars($project['name'] ?? '');
+require_once "../../includes/header.php";
+?>
 <body class="bg-slate-950 text-slate-100 min-h-screen flex items-center justify-center p-6">
     <div class="w-full max-w-2xl bg-slate-900 border border-slate-800 rounded-2xl p-8">
         <h2 class="text-lg font-bold mb-6">Ubah Parameter Lapangan Proyek</h2>

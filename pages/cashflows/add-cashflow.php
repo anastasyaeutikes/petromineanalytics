@@ -1,15 +1,11 @@
 <?php
 // add-cashflow.php
-session_start();
-if (!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true) {
-    header("location: login.php");
-    exit;
-}
+require_once "../../includes/auth.php";
 $user_id = $_SESSION['user_id'];
-require_once "config.php";
+require_once "../../config/config.php";
 
 $project_id = isset($_GET['project_id']) ? trim($_GET['project_id']) : null;
-if (empty($project_id) || !ctype_digit($project_id)) { header("location: home.php"); exit; }
+if (empty($project_id) || !ctype_digit($project_id)) { header("location: ../projects/home.php"); exit; }
 
 $project_details = null;
 $sql_project = "SELECT name, tax, invest_capital, investment_years, depreciation_method FROM projects WHERE id = ? AND user_id = ?";
@@ -18,9 +14,10 @@ if ($stmt_project = $mysqli->prepare($sql_project)) {
     if ($stmt_project->execute()) { $project_details = $stmt_project->get_result()->fetch_assoc(); }
     $stmt_project->close();
 }
-if(!$project_details) { header("location: home.php"); exit; }
+if(!$project_details) { header("location: ../projects/home.php"); exit; }
 
-$year = $production = $price_per_barrel = $opex = "";
+$year = isset($_GET['year']) ? trim($_GET['year']) : "";
+$production = $price_per_barrel = $opex = "";
 $validation_errors = [];
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
@@ -56,7 +53,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         if ($stmt = $mysqli->prepare($sql)) {
             $stmt->bind_param("iiddddi", $year, $production, $income, $opex, $taxable_income, $net_cashflow, $project_id);
             if ($stmt->execute()) {
-                header("location: project-details.php?id=" . $project_id);
+                header("location: ../projects/project-details.php?id=" . $project_id);
                 exit;
             }
             $stmt->close();
@@ -64,15 +61,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 }
 ?>
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <title>Input Cashflow Tahunan - Petromine Analytics</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>body { font-family: 'Plus Jakarta Sans', sans-serif; }</style>
-</head>
+<?php
+$base_path = "../../";
+$page_title = "Input Cashflow Tahunan - " . htmlspecialchars($project_details['name'] ?? '');
+require_once "../../includes/header.php";
+?>
 <body class="bg-slate-950 text-slate-100 min-h-screen flex items-center justify-center p-6">
     <div class="w-full max-w-xl bg-slate-900 border border-slate-800 rounded-2xl p-8 shadow-2xl">
         <h2 class="text-lg font-bold text-white mb-2">Cashflow</h2>
@@ -96,7 +89,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 <input type="number" name="opex" placeholder="Contoh: 2000000" value="<?php echo htmlspecialchars($opex); ?>" class="w-full p-3 bg-slate-950 border border-slate-800 rounded-xl text-sm text-white focus:outline-none">
             </div>
             <div class="flex justify-end gap-3 pt-4 border-t border-slate-800">
-                <a href="project-details.php?id=<?php echo $project_id; ?>" class="bg-slate-800 text-slate-300 py-2.5 px-5 rounded-xl text-xs font-bold">Batal</a>
+                <a href="../projects/project-details.php?id=<?php echo $project_id; ?>" class="bg-slate-800 text-slate-300 py-2.5 px-5 rounded-xl text-xs font-bold">Batal</a>
                 <button type="submit" class="bg-emerald-500 text-slate-950 py-2.5 px-5 rounded-xl text-xs font-bold">Simpan & Hitung</button>
             </div>
         </form>

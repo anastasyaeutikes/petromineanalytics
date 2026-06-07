@@ -1,13 +1,9 @@
 <?php
 // profile.php
-session_start();
-if (!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true) {
-    header("location: login.php");
-    exit;
-}
+require_once "../../includes/auth.php";
 $user_id = $_SESSION['user_id'];
 
-require_once "config.php";
+require_once "../../config/config.php";
 
 $user = [];
 $sql  = "SELECT id, name, email, password, role, profile_photo, created_at FROM users WHERE id = ?";
@@ -16,6 +12,10 @@ if ($stmt = $mysqli->prepare($sql)) {
     $stmt->execute();
     $user = $stmt->get_result()->fetch_assoc();
     $stmt->close();
+}
+
+if (!empty($user['profile_photo']) && strpos($user['profile_photo'], 'uploads/') === 0 && strpos($user['profile_photo'], 'assets/') === false) {
+    $user['profile_photo'] = 'assets/' . $user['profile_photo'];
 }
 
 $total_projects = 0;
@@ -32,42 +32,24 @@ $mysqli->close();
 $initials     = strtoupper(substr($user['name'] ?? 'U', 0, 2));
 $joined       = !empty($user['created_at']) ? date('d M Y', strtotime($user['created_at'])) : '-';
 $current_role = $user['role'] ?? '-';
-$has_photo    = !empty($user['profile_photo']) && file_exists($user['profile_photo']);
+$has_photo    = !empty($user['profile_photo']) && file_exists('../../' . $user['profile_photo']);
 
 $success_msg = $_SESSION['success_msg'] ?? '';
 unset($_SESSION['success_msg']);
 ?>
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <title>Profil Saya - Petromine Analytics</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; }
-        .stat-card { background: linear-gradient(135deg, rgba(16,185,129,.08) 0%, rgba(15,23,42,0) 100%); }
-    </style>
-</head>
+<?php
+$base_path = "../../";
+$page_title = "Profil Saya";
+$extra_head = "<style>.stat-card { background: linear-gradient(135deg, rgba(16,185,129,.08) 0%, rgba(15,23,42,0) 100%); }</style>";
+require_once "../../includes/header.php";
+?>
 <body class="bg-slate-950 text-slate-100 min-h-screen">
 
-<nav class="border-b border-slate-800 bg-slate-900/50 backdrop-blur sticky top-0 z-50 px-6 py-4 flex justify-between items-center">
-    <div class="flex items-center gap-3">
-        <div class="w-9 h-9 bg-emerald-500 rounded-xl flex items-center justify-center text-slate-950 font-black">
-            <i class="fas fa-oil-well"></i>
-        </div>
-        <span class="text-md font-bold text-white tracking-tight">Petromine <span class="text-emerald-400 font-normal">Analytics</span></span>
-    </div>
-    <div class="flex items-center gap-3">
-        <a href="home.php" class="px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-400 hover:text-emerald-400 transition-all text-xs font-semibold">
-            <i class="fas fa-arrow-left mr-1.5"></i>Dashboard
-        </a>
-        <a href="logout.php" class="px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-400 hover:text-rose-400 transition-all text-xs">
-            <i class="fas fa-power-off"></i>
-        </a>
-    </div>
-</nav>
+<?php
+$nav_back_url = "../projects/home.php";
+$nav_back_label = "Dashboard";
+require_once "../../includes/navbar.php";
+?>
 
 <main class="max-w-4xl mx-auto px-6 py-10">
 
@@ -100,7 +82,7 @@ unset($_SESSION['success_msg']);
                 <div class="w-24 h-24 rounded-full overflow-hidden bg-emerald-500/15 border-2 border-emerald-500/40 flex items-center justify-center flex-shrink-0"
                      style="box-shadow: 0 0 0 5px rgba(16,185,129,0.10);">
                     <?php if ($has_photo): ?>
-                        <img src="<?php echo htmlspecialchars($user['profile_photo']); ?>" class="w-full h-full object-cover" alt="Foto Profil">
+                        <img src="<?php echo htmlspecialchars('../../' . $user['profile_photo']); ?>" class="w-full h-full object-cover" alt="Foto Profil">
                     <?php else: ?>
                         <span class="text-3xl font-black text-emerald-400"><?php echo $initials; ?></span>
                     <?php endif; ?>
@@ -154,9 +136,9 @@ unset($_SESSION['success_msg']);
 
                 <div class="py-3 border-b border-slate-800/80">
                     <p class="text-[10px] text-slate-600 font-semibold uppercase tracking-wide mb-1">Password</p>
-                    <div class="flex items-center gap-2">
-                        <p id="pw-display" class="text-sm font-semibold text-slate-200 tracking-widest">••••••••••</p>
-                        <button type="button" onclick="togglePw()" class="text-slate-500 hover:text-emerald-400 transition-colors ml-1">
+                    <div class="flex items-center justify-between gap-2">
+                        <p id="pw-display" class="text-sm font-semibold text-slate-200 tracking-widest break-all min-w-0">••••••••••</p>
+                        <button type="button" onclick="togglePw()" class="text-slate-500 hover:text-emerald-400 transition-colors ml-1 flex-shrink-0">
                             <i id="pw-icon" class="fas fa-eye text-xs"></i>
                         </button>
                     </div>
@@ -174,7 +156,7 @@ unset($_SESSION['success_msg']);
 </main>
 
 <script>
-const realPw = "<?php echo addslashes($user['password'] ?? ''); ?>";
+const realPw = "<?php echo addslashes($_SESSION['user_password'] ?? '(Silakan login kembali untuk melihat password)'); ?>";
 let shown = false;
 function togglePw() {
     shown = !shown;

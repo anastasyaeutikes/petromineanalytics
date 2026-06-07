@@ -1,9 +1,8 @@
 <?php
 // delete-project.php
-session_start();
-if (!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true) { header("location: login.php"); exit; }
+require_once "../../includes/auth.php";
 $user_id = $_SESSION['user_id'];
-require_once "config.php";
+require_once "../../config/config.php";
 
 $project_id = isset($_GET['id']) ? trim($_GET['id']) : null;
 if (!empty($project_id)) {

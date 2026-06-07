@@ -1,12 +1,8 @@
 <?php
 // create-project.php
-session_start();
-if (!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true) {
-    header("location: login.php");
-    exit;
-}
+require_once "../../includes/auth.php";
 $user_id = $_SESSION['user_id'];
-require_once "config.php";
+require_once "../../config/config.php";
 
 $name = $site_manager = $invest_capital = $invest_noncapital = $tax = $investment_years = $depreciation_method = $decline_rate = "";
 $validation_errors = [];
@@ -43,15 +39,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 }
 ?>
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <title>Inisiasi Lapangan Baru - Petromine Analytics</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>body { font-family: 'Plus Jakarta Sans', sans-serif; }</style>
-</head>
+<?php
+$base_path = "../../";
+$page_title = "Inisiasi Lapangan Baru";
+require_once "../../includes/header.php";
+?>
 <body class="bg-slate-950 text-slate-100 min-h-screen flex items-center justify-center p-6">
     <div class="w-full max-w-2xl bg-slate-900 border border-slate-800 rounded-2xl p-8 shadow-2xl">
         <h2 class="text-xl font-bold text-white mb-6">Inisiasi Parameter Lapangan Proyek</h2>
