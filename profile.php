@@ -201,15 +201,7 @@ $has_photo    = !empty($user['profile_photo']) && file_exists($user['profile_pho
     <?php endif; ?>
 
     <!-- ── CARD: Ringkasan Akun ─────────────────────────────────────────────── -->
-    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 mb-5 flex items-center gap-5">
-        <!-- Avatar -->
-        <div class="w-14 h-14 rounded-2xl overflow-hidden bg-emerald-500/15 border border-slate-700 flex items-center justify-center flex-shrink-0">
-            <?php if ($has_photo): ?>
-                <img src="<?php echo htmlspecialchars($user['profile_photo']); ?>" class="w-full h-full object-cover" alt="Avatar">
-            <?php else: ?>
-                <span class="text-lg font-black text-emerald-400"><?php echo $initials; ?></span>
-            <?php endif; ?>
-        </div>
+   <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 mb-5 flex justify-between items-center">
         <div class="flex-1 min-w-0">
             <p class="text-sm font-bold text-white truncate"><?php echo htmlspecialchars($user['name'] ?? '-'); ?></p>
             <p class="text-xs text-slate-500 truncate"><?php echo htmlspecialchars($user['email'] ?? '-'); ?></p>
@@ -252,7 +244,7 @@ $has_photo    = !empty($user['profile_photo']) && file_exists($user['profile_pho
                     </div>
                     <div class="photo-overlay absolute inset-0 bg-slate-950/75 rounded-full flex flex-col items-center justify-center gap-0.5">
                         <i class="fas fa-camera text-white text-sm"></i>
-                        <span class="text-[9px] text-white font-bold tracking-wide">GANTI</span>
+                        <span class="text-[9px] text-white font-bold tracking-wide">edit</span>
                     </div>
                 </label>
                 <input type="file" id="profile_photo_input" name="profile_photo"
@@ -264,12 +256,12 @@ $has_photo    = !empty($user['profile_photo']) && file_exists($user['profile_pho
                         <label for="profile_photo_input"
                             class="cursor-pointer inline-flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 text-xs font-semibold px-3 py-2 rounded-lg transition-all">
                             <i class="fas fa-upload text-emerald-400 text-[11px]"></i>
-                            <?php echo $has_photo ? 'Ganti Foto' : 'Upload Foto'; ?>
+                            <?php echo $has_photo ? 'Edit Photo' : 'Upload Foto'; ?>
                         </label>
                         <?php if ($has_photo): ?>
                         <button type="button" onclick="confirmDeletePhoto()"
                             class="inline-flex items-center gap-1.5 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-400 text-xs font-semibold px-3 py-2 rounded-lg transition-all">
-                            <i class="fas fa-trash-alt text-[11px]"></i> Hapus Foto
+                            <i class="fas fa-trash-alt text-[11px]"></i> Delete
                         </button>
                         <?php endif; ?>
                     </div>
@@ -283,7 +275,7 @@ $has_photo    = !empty($user['profile_photo']) && file_exists($user['profile_pho
         <!-- ── CARD: Informasi Akun ──────────────────────────────────────── -->
         <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 mb-5">
             <h2 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-5 flex items-center gap-2">
-                <i class="fas fa-id-card text-emerald-400"></i> Informasi Akun
+                <i class="fas fa-id-card text-emerald-400"></i> Account Information
             </h2>
             <div class="space-y-4">
 
@@ -301,7 +293,7 @@ $has_photo    = !empty($user['profile_photo']) && file_exists($user['profile_pho
                 <!-- Role (editable dropdown) -->
                 <div>
                     <label class="block text-xs font-semibold text-slate-400 mb-1.5">
-                        Role / Jabatan <span class="text-emerald-500">*</span>
+                        Role<span class="text-emerald-500">*</span>
                     </label>
                     <select name="role"
                         class="custom-select w-full bg-slate-950/60 border border-slate-700 text-slate-100 text-sm rounded-xl px-4 py-2.5 pr-10 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 transition-all cursor-pointer">
@@ -369,10 +361,10 @@ $has_photo    = !empty($user['profile_photo']) && file_exists($user['profile_pho
         <!-- Tombol Simpan -->
         <div class="flex justify-end gap-3">
             <a href="home.php" class="px-5 py-2.5 bg-slate-800 border border-slate-700 text-slate-300 hover:text-white font-semibold text-xs rounded-xl transition-all">
-                Batal
+                Cancel 
             </a>
             <button type="submit" class="bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 text-slate-950 font-bold px-6 py-2.5 rounded-xl text-xs flex items-center gap-2 shadow-lg transition-all">
-                <i class="fas fa-save"></i> Simpan Perubahan
+                <i class="fas fa-save"></i> Save Changes
             </button>
         </div>
     </form>

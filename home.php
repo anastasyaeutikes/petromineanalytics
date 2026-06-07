@@ -7,7 +7,26 @@ if (!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true) {
 }
 $user_id = $_SESSION['user_id'];
 $user_name = $_SESSION['user_name'];
+$user_photo = null;
+$user_role  = "Senior Oil & Gas Analyst";
 
+require_once "config.php";
+
+// Ambil data user
+$sql_user = "SELECT profile_photo, role FROM users WHERE id = ?";
+if ($stmt_user = $mysqli->prepare($sql_user)) {
+    $stmt_user->bind_param("i", $user_id);
+    if ($stmt_user->execute()) {
+        $result_user = $stmt_user->get_result();
+        if ($row_user = $result_user->fetch_assoc()) {
+            $user_photo = $row_user['profile_photo'];
+            if (!empty($row_user['role'])) {
+                $user_role = $row_user['role'];
+            }
+        }
+    }
+    $stmt_user->close();
+}
 require_once "config.php"; 
 
 $projects = []; 
@@ -39,14 +58,45 @@ $mysqli->close();
             <div class="w-9 h-9 bg-emerald-500 rounded-xl flex items-center justify-center text-slate-950 font-black"><i class="fas fa-oil-well"></i></div>
             <span class="text-md font-bold text-white tracking-tight">Petromine <span class="text-emerald-400 font-normal">Analytics</span></span>
         </div>
-        <div class="flex items-center gap-4">
-            <!-- USERNAME DIBUAT CLICKABLE MENUJU PROFILE PAGE -->
-            <a href="profile.php" class="text-right hidden sm:block hover:opacity-80 transition-opacity group">
-                <p class="text-xs font-bold text-slate-200 group-hover:text-emerald-400 transition-colors"><?php echo htmlspecialchars($user_name); ?></p>
-                <p class="text-[10px] text-slate-500 font-medium">Senior Oil & Gas Analyst</p>
-            </a>
-            <a href="logout.php" class="px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-400 hover:text-rose-400 transition-all text-xs"><i class="fas fa-power-off"></i></a>
+ <div class="flex items-center gap-4">
+
+    <a href="profile.php"
+       class="hidden sm:flex items-center gap-3 hover:opacity-90 transition-all group">
+
+        <?php if (!empty($user_photo) && file_exists($user_photo)): ?>
+
+            <img
+                src="<?php echo htmlspecialchars($user_photo); ?>"
+                alt="Profile"
+                class="w-10 h-10 rounded-full object-cover border-2 border-emerald-500"
+            >
+
+        <?php else: ?>
+
+            <div class="w-10 h-10 rounded-full bg-emerald-500 flex items-center justify-center text-slate-950 font-bold text-sm">
+                <?php echo strtoupper(substr($user_name, 0, 1)); ?>
+            </div>
+
+        <?php endif; ?>
+
+        <div class="text-left leading-tight">
+            <p class="text-xs font-bold text-slate-200 group-hover:text-emerald-400 transition-colors">
+                <?php echo htmlspecialchars($user_name); ?>
+            </p>
+
+            <p class="text-[10px] text-slate-500 font-medium">
+                <?php echo htmlspecialchars($user_role); ?>
+            </p>
         </div>
+
+    </a>
+
+    <a href="logout.php"
+       class="px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-400 hover:text-rose-400 transition-all text-xs">
+        <i class="fas fa-power-off"></i>
+    </a>
+
+</div>
     </nav>
     <main class="max-w-7xl mx-auto px-6 py-10">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
