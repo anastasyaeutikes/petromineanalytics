@@ -120,7 +120,10 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
                 <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Alamat Email</label>
                 <div class="relative">
                     <span class="absolute left-4 top-3.5 text-slate-500"><i class="fas fa-envelope"></i></span>
-                    <input type="email" name="email" value="<?php echo htmlspecialchars($email); ?>" 
+                    <input 
+                    type="email" 
+                    name="email" 
+                    value="<?php echo htmlspecialchars($email); ?>" 
                            class="w-full pl-11 pr-4 py-3 bg-slate-950 border <?php echo (!empty($email_err)) ? 'border-rose-500' : 'border-slate-800'; ?> rounded-xl text-sm text-white focus:outline-none focus:border-emerald-500 transition-all placeholder-slate-600" placeholder="nama@perusahaan.com">
                 </div>
                 <?php if(!empty($email_err)): ?>

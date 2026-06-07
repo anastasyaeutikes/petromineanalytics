@@ -40,7 +40,11 @@ $mysqli->close();
             <span class="text-md font-bold text-white tracking-tight">Petromine <span class="text-emerald-400 font-normal">Analytics</span></span>
         </div>
         <div class="flex items-center gap-4">
-            <div class="text-right hidden sm:block"><p class="text-xs font-bold text-slate-200"><?php echo htmlspecialchars($user_name); ?></p><p class="text-[10px] text-slate-500 font-medium">Senior Oil & Gas Analyst</p></div>
+            <!-- USERNAME DIBUAT CLICKABLE MENUJU PROFILE PAGE -->
+            <a href="profile.php" class="text-right hidden sm:block hover:opacity-80 transition-opacity group">
+                <p class="text-xs font-bold text-slate-200 group-hover:text-emerald-400 transition-colors"><?php echo htmlspecialchars($user_name); ?></p>
+                <p class="text-[10px] text-slate-500 font-medium">Senior Oil & Gas Analyst</p>
+            </a>
             <a href="logout.php" class="px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-400 hover:text-rose-400 transition-all text-xs"><i class="fas fa-power-off"></i></a>
         </div>
     </nav>
