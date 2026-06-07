@@ -33,9 +33,6 @@ $initials     = strtoupper(substr($user['name'] ?? 'U', 0, 2));
 $joined       = !empty($user['created_at']) ? date('d M Y', strtotime($user['created_at'])) : '-';
 $current_role = $user['role'] ?? '-';
 $has_photo    = !empty($user['profile_photo']) && file_exists('../../' . $user['profile_photo']);
-
-$success_msg = $_SESSION['success_msg'] ?? '';
-unset($_SESSION['success_msg']);
 ?>
 <?php
 $base_path = "../../";
@@ -63,13 +60,6 @@ require_once "../../includes/navbar.php";
             <i class="fas fa-pen"></i> Edit Profile
         </a>
     </div>
-
-    <?php if (!empty($success_msg)): ?>
-    <div id="flash-msg" class="mb-6 flex items-center gap-3 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-semibold px-4 py-3 rounded-xl">
-        <i class="fas fa-check-circle text-base"></i> <?php echo htmlspecialchars($success_msg); ?>
-    </div>
-    <script>setTimeout(() => { const el = document.getElementById('flash-msg'); if(el) el.style.display='none'; }, 4000);</script>
-    <?php endif; ?>
 
     <!-- Two-column, equal height -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-5" style="align-items: stretch;">

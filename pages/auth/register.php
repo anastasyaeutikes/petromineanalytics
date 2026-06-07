@@ -41,9 +41,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             if ($stmt->execute()) {
                 header("location: login.php?registration=success");
                 exit();
-            } else { $error_message = "Registrasi gagal, silakan coba lagi."; }
+            } else { 
+                $error_message = "Registrasi gagal, silakan coba lagi."; 
+                $_SESSION["toast_error"] = "Registrasi gagal, silakan coba lagi.";
+            }
             $stmt->close();
         }
+    } else {
+        $_SESSION["toast_error"] = "Registrasi gagal. Silakan periksa kolom yang ditandai.";
     }
     $mysqli->close();
 }

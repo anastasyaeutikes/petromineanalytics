@@ -9,7 +9,11 @@ if (!empty($project_id)) {
     $sql = "DELETE FROM projects WHERE id = ? AND user_id = ?";
     if ($stmt = $mysqli->prepare($sql)) {
         $stmt->bind_param("ii", $project_id, $user_id);
-        $stmt->execute();
+        if ($stmt->execute()) {
+            $_SESSION["toast_success"] = "Proyek berhasil dihapus secara permanen.";
+        } else {
+            $_SESSION["toast_error"] = "Gagal menghapus proyek.";
+        }
         $stmt->close();
     }
 }

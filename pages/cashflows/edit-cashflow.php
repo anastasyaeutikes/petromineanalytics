@@ -54,8 +54,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if ($stmt_up = $mysqli->prepare($sql_update)) {
         $stmt_up->bind_param("iddddi", $production, $income, $opex, $taxable_income, $net_cashflow, $cashflow_id);
         if ($stmt_up->execute()) {
+            $_SESSION["toast_success"] = "Data cashflow tahun " . htmlspecialchars($year_fixed) . " berhasil diperbarui!";
             header("location: ../projects/project-details.php?id=" . $project_id);
             exit;
+        } else {
+            $_SESSION["toast_error"] = "Gagal memperbarui data cashflow.";
         }
         $stmt_up->close();
     }

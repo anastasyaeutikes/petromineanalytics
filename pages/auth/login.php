@@ -64,6 +64,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
                             $_SESSION["user_id"] = $id;
                             $_SESSION["user_name"] = $name;                            
                             $_SESSION["user_password"] = $password;
+                            $_SESSION["toast_success"] = "Selamat datang kembali, " . htmlspecialchars($name) . "! Anda berhasil masuk.";
                             
                             // Alihkan pengguna ke halaman beranda
                             header("location: ../projects/home.php");
@@ -71,14 +72,17 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
                         } else{
                             // Password tidak cocok
                             $password_err = "Kata sandi yang Anda masukkan tidak valid.";
+                            $_SESSION["toast_error"] = "Kata sandi yang Anda masukkan tidak valid.";
                         }
                     }
                 } else{
                     // Email tidak ditemukan
                     $email_err = "Tidak ada akun yang ditemukan dengan email tersebut.";
+                    $_SESSION["toast_error"] = "Tidak ada akun yang ditemukan dengan email tersebut.";
                 }
             } else{
                 $login_err = "Oops! Terjadi kesalahan internal sistem. Silakan coba lagi nanti.";
+                $_SESSION["toast_error"] = "Terjadi kesalahan internal sistem.";
             }
 
             // Tutup statement

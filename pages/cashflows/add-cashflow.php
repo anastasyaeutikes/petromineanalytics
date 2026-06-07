@@ -53,11 +53,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         if ($stmt = $mysqli->prepare($sql)) {
             $stmt->bind_param("iiddddi", $year, $production, $income, $opex, $taxable_income, $net_cashflow, $project_id);
             if ($stmt->execute()) {
+                $_SESSION["toast_success"] = "Data cashflow tahun " . htmlspecialchars($year) . " berhasil ditambahkan!";
                 header("location: ../projects/project-details.php?id=" . $project_id);
                 exit;
             }
             $stmt->close();
         }
+    } else {
+        $_SESSION["toast_error"] = "Gagal menyimpan cashflow. Harap periksa kolom yang ditandai.";
     }
 }
 ?>

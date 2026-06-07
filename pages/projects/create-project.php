@@ -31,11 +31,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         if ($stmt = $mysqli->prepare($sql)) {
             $stmt->bind_param("ssddddssi", $name, $site_manager, $invest_capital, $invest_noncapital, $tax, $investment_years, $depreciation_method, $decline_rate, $user_id);
             if ($stmt->execute()) {
+                $_SESSION["toast_success"] = "Proyek baru '" . htmlspecialchars($name) . "' berhasil diinisiasi!";
                 header("location: home.php");
                 exit;
             }
             $stmt->close();
         }
+    } else {
+        $_SESSION["toast_error"] = "Gagal membuat proyek. Harap periksa input Anda.";
     }
 }
 ?>

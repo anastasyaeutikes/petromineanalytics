@@ -47,7 +47,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['action']) && $_POST['
         $stmt_del->execute();
         $stmt_del->close();
     }
-    $_SESSION['success_msg'] = "Foto profil berhasil dihapus.";
+    $_SESSION['toast_success'] = "Foto profil berhasil dihapus.";
     $mysqli->close();
     header("location: profile.php");
     exit;
@@ -95,7 +95,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['action']) && $_POST['
                 if ($stmt_upd->execute()) {
                     $_SESSION['user_name']   = $new_name;
                     $_SESSION['user_role']   = $new_role;
-                    $_SESSION['success_msg'] = "Profil berhasil diperbarui!";
+                    $_SESSION['toast_success'] = "Profil berhasil diperbarui!";
                     $mysqli->close();
                     header("location: profile.php");
                     exit;

@@ -18,7 +18,11 @@ if (!empty($cashflow_id) && ctype_digit($cashflow_id) && !empty($project_id) && 
             
     if ($stmt = $mysqli->prepare($sql)) {
         $stmt->bind_param("ii", $cashflow_id, $user_id);
-        $stmt->execute();
+        if ($stmt->execute()) {
+            $_SESSION["toast_success"] = "Data cashflow berhasil dihapus.";
+        } else {
+            $_SESSION["toast_error"] = "Gagal menghapus data cashflow.";
+        }
         $stmt->close();
     }
 }

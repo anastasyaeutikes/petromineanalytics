@@ -20,7 +20,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $sql = "UPDATE projects SET name=?, site_manager=?, invest_capital=?, invest_noncapital=?, tax=?, investment_years=?, depreciation_method=?, decline_rate=?, updated_at=NOW() WHERE id=? AND user_id=?";
     if ($stmt = $mysqli->prepare($sql)) {
         $stmt->bind_param("ssddddssii", $name, $site_manager, $invest_capital, $invest_noncapital, $tax, $investment_years, $depreciation_method, $decline_rate, $project_id, $user_id);
-        if ($stmt->execute()) { header("location: project-details.php?id=" . $project_id); exit; }
+        if ($stmt->execute()) { 
+            $_SESSION["toast_success"] = "Parameter proyek '" . htmlspecialchars($name) . "' berhasil diperbarui!";
+            header("location: project-details.php?id=" . $project_id); 
+            exit; 
+        } else {
+            $_SESSION["toast_error"] = "Gagal memperbarui parameter proyek.";
+        }
     }
 }
 
