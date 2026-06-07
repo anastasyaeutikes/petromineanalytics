@@ -223,8 +223,9 @@ require_once "../../includes/header.php";
                 <p class="text-xs text-slate-400 mt-1">Metode Depresiasi: <span class="text-slate-200 font-semibold"><?php echo htmlspecialchars($depreciation_method); ?></span> &nbsp;|&nbsp; Durasi Kontrak: <span class="text-slate-200 font-semibold"><?php echo $N; ?> Tahun</span></p>
             </div>
             <div class="flex gap-3">
-                <a href="edit-project.php?id=<?php echo $project['id']; ?>" class="bg-slate-800 hover:bg-slate-700 px-4 py-2 text-xs font-bold rounded-xl border border-slate-700">Edit Parameter</a>
-                <a href="../cashflows/add-cashflow.php?project_id=<?php echo $project['id']; ?>" class="bg-emerald-500 hover:bg-emerald-600 text-slate-950 px-4 py-2 text-xs font-bold rounded-xl shadow-md">Input Data Tahunan</a>
+                <a href="edit-project.php?id=<?php echo $project['id']; ?>" class="bg-slate-800 hover:bg-slate-700 px-4 py-2 text-xs font-bold rounded-xl border border-slate-700 flex items-center">Edit Parameter</a>
+                <a href="../cashflows/bulk-cashflow.php?project_id=<?php echo $project['id']; ?>" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 text-xs font-bold rounded-xl shadow-md flex items-center gap-1.5"><i class="fas fa-table"></i> Input Massal (Bulk / Excel)</a>
+                <a href="../cashflows/add-cashflow.php?project_id=<?php echo $project['id']; ?>" class="bg-emerald-500 hover:bg-emerald-600 text-slate-950 px-4 py-2 text-xs font-bold rounded-xl shadow-md flex items-center gap-1.5"><i class="fas fa-plus"></i> Input Data Tahunan</a>
                 <!-- Tombol Export Excel -->
                 <button
                     onclick="exportToExcel()"
@@ -331,6 +332,21 @@ require_once "../../includes/header.php";
                         <?php endforeach; ?>
                     </tbody>
                 </table>
+            </div>
+        </div>
+
+        <!-- INFO UNIT SATUAN (Transparansi Satuan Migas) -->
+        <div class="bg-slate-900 border border-slate-800/80 rounded-2xl p-5 flex items-start gap-4 shadow-xl">
+            <div class="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 flex-shrink-0">
+                <i class="fas fa-info-circle text-lg"></i>
+            </div>
+            <div>
+                <h4 class="text-xs font-bold text-slate-200 uppercase tracking-wider">Panduan Skala & Satuan Migas</h4>
+                <p class="text-[11px] text-slate-400 mt-1.5 leading-relaxed">
+                    Sistem mendukung fleksibilitas skala input secara konsisten. 
+                    Jika Anda menggunakan <strong>Satuan Penuh (USD & BBL)</strong>, maka kolom <span class="text-slate-200 font-semibold">($M)</span> di atas dibaca sebagai USD penuh, dan <span class="text-slate-200 font-semibold">(Mbbl)</span> sebagai BBL penuh. 
+                    Jika menggunakan <strong>Satuan Standar Kontrak Migas (Ribuan / M)</strong>, maka <span class="text-slate-200 font-semibold">($M)</span> mewakili ribuan USD (Thousand USD) dan <span class="text-slate-200 font-semibold">(Mbbl)</span> mewakili ribuan Barrel (Thousand BBL). Perhitungan keekonomian (NPV, POT, ROR) tetap berjalan 100% konsisten pada kedua basis satuan tersebut.
+                </p>
             </div>
         </div>
 

@@ -29,6 +29,7 @@ if (!$project_details) { header("location: ../projects/home.php"); exit; }
 // Hitung harga per barel dari data yang tersimpan
 $price_per_barrel_value = ($cf['production'] > 0) ? ($cf['income'] / $cf['production']) : 0;
 
+$validation_errors = [];
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $production       = trim($_POST['production']);
     $price_per_barrel = trim($_POST['price_per_barrel']);
@@ -36,31 +37,45 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Tahun diambil langsung dari database, bukan dari POST
     $year_fixed       = $cf['year'];
 
-    $income = $production * $price_per_barrel;
-
-    if ($project_details['depreciation_method'] == "Straight Line") {
-        $depreciation = $project_details['invest_capital'] / $project_details['investment_years'];
-    } else {
-        $depreciation = (2 / $project_details['investment_years']) * $project_details['invest_capital'];
+    if(empty($production) || !is_numeric($production) || $production <= 0) {
+        $validation_errors['production'] = "Volume produksi wajib diisi dengan angka positif lebih besar dari 0.";
+    }
+    if(empty($price_per_barrel) || !is_numeric($price_per_barrel) || $price_per_barrel <= 0) {
+        $validation_errors['price_per_barrel'] = "Harga per barel wajib diisi dengan angka positif lebih besar dari 0.";
+    }
+    if(empty($opex) || !is_numeric($opex) || $opex <= 0) {
+        $validation_errors['opex'] = "OPEX wajib diisi dengan angka positif lebih besar dari 0.";
     }
 
-    $taxable_income = $income - $opex - $depreciation;
-    if ($taxable_income < 0) $taxable_income = 0;
+    if (empty($validation_errors)) {
+        $income = $production * $price_per_barrel;
 
-    $tax_paid     = $taxable_income * ($project_details['tax'] / 100);
-    $net_cashflow = $income - $opex - $tax_paid;
-
-    $sql_update = "UPDATE cashflows SET production = ?, income = ?, opex = ?, taxable_income = ?, net_cashflow = ?, updated_at = NOW() WHERE id = ?";
-    if ($stmt_up = $mysqli->prepare($sql_update)) {
-        $stmt_up->bind_param("iddddi", $production, $income, $opex, $taxable_income, $net_cashflow, $cashflow_id);
-        if ($stmt_up->execute()) {
-            $_SESSION["toast_success"] = "Data cashflow tahun " . htmlspecialchars($year_fixed) . " berhasil diperbarui!";
-            header("location: ../projects/project-details.php?id=" . $project_id);
-            exit;
+        if ($project_details['depreciation_method'] == "Straight Line") {
+            $depreciation = $project_details['invest_capital'] / $project_details['investment_years'];
         } else {
-            $_SESSION["toast_error"] = "Gagal memperbarui data cashflow.";
+            $depreciation = (2 / $project_details['investment_years']) * $project_details['invest_capital'];
         }
-        $stmt_up->close();
+
+        $taxable_income = $income - $opex - $depreciation;
+        if ($taxable_income < 0) $taxable_income = 0;
+
+        $tax_paid     = $taxable_income * ($project_details['tax'] / 100);
+        $net_cashflow = $income - $opex - $tax_paid;
+
+        $sql_update = "UPDATE cashflows SET production = ?, income = ?, opex = ?, taxable_income = ?, net_cashflow = ?, updated_at = NOW() WHERE id = ?";
+        if ($stmt_up = $mysqli->prepare($sql_update)) {
+            $stmt_up->bind_param("iddddi", $production, $income, $opex, $taxable_income, $net_cashflow, $cashflow_id);
+            if ($stmt_up->execute()) {
+                $_SESSION["toast_success"] = "Data cashflow tahun " . htmlspecialchars($year_fixed) . " berhasil diperbarui!";
+                header("location: ../projects/project-details.php?id=" . $project_id);
+                exit;
+            } else {
+                $_SESSION["toast_error"] = "Gagal memperbarui data cashflow.";
+            }
+            $stmt_up->close();
+        }
+    } else {
+        $_SESSION["toast_error"] = "Gagal memperbarui data cashflow. Harap periksa input Anda.";
     }
 }
 ?>
@@ -108,16 +123,21 @@ require_once "../../includes/header.php";
 
             <div>
                 <label class="block text-xs font-bold text-slate-400 mb-2">
-                    Volume Produksi Minyak Mentah <span class="text-slate-600 font-normal">(BBL / Tahun)</span>
+                    Volume Produksi Minyak Mentah <span class="text-slate-600 font-normal">(BBL atau Mbbl)</span>
                 </label>
                 <input
                     type="number"
+                    id="cf_production"
+                    min="0.01"
+                    step="any"
                     name="production"
                     value="<?php echo htmlspecialchars($cf['production']); ?>"
                     placeholder="Contoh: 150000"
                     class="w-full p-3 bg-slate-950 border border-slate-800 rounded-xl text-sm text-white focus:outline-none focus:border-emerald-500/50 transition-colors"
                     required
                 >
+                <p id="production_preview" class="text-[10px] text-emerald-400 mt-1 italic"></p>
+                <p class="text-rose-400 text-xs mt-1"><?php echo $validation_errors['production'] ?? ''; ?></p>
             </div>
 
             <div>
@@ -126,6 +146,8 @@ require_once "../../includes/header.php";
                 </label>
                 <input
                     type="number"
+                    id="cf_price"
+                    min="0.01"
                     step="any"
                     name="price_per_barrel"
                     value="<?php echo htmlspecialchars(number_format($price_per_barrel_value, 2, '.', '')); ?>"
@@ -133,20 +155,27 @@ require_once "../../includes/header.php";
                     class="w-full p-3 bg-slate-950 border border-slate-800 rounded-xl text-sm text-white focus:outline-none focus:border-emerald-500/50 transition-colors"
                     required
                 >
+                <p id="price_preview" class="text-[10px] text-emerald-400 mt-1 italic"></p>
+                <p class="text-rose-400 text-xs mt-1"><?php echo $validation_errors['price_per_barrel'] ?? ''; ?></p>
             </div>
 
             <div>
                 <label class="block text-xs font-bold text-slate-400 mb-2">
-                    Biaya Operasional Lapangan <span class="text-slate-600 font-normal">(OPEX – USD)</span>
+                    Biaya Operasional Lapangan <span class="text-slate-600 font-normal">(OPEX – USD atau M OPEX)</span>
                 </label>
                 <input
                     type="number"
+                    id="cf_opex"
+                    min="0.01"
+                    step="any"
                     name="opex"
                     value="<?php echo htmlspecialchars($cf['opex']); ?>"
                     placeholder="Contoh: 2000000"
                     class="w-full p-3 bg-slate-950 border border-slate-800 rounded-xl text-sm text-white focus:outline-none focus:border-emerald-500/50 transition-colors"
                     required
                 >
+                <p id="opex_preview" class="text-[10px] text-emerald-400 mt-1 italic"></p>
+                <p class="text-rose-400 text-xs mt-1"><?php echo $validation_errors['opex'] ?? ''; ?></p>
             </div>
 
             <!-- Info kalkulasi otomatis -->
@@ -169,5 +198,57 @@ require_once "../../includes/header.php";
             </div>
         </main>
     </div>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const formatCurrencyPreview = (num) => {
+        if (!num || isNaN(num) || num < 0) return '';
+        const parsed = parseFloat(num);
+        const fullUSD = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(parsed);
+        const millionUSD = (parsed / 1000000).toFixed(2) + ' Juta USD';
+        const thousandUSD = (parsed / 1000).toFixed(2) + ' M USD (Ribuan)';
+        return `Interpretasi: ${fullUSD} | ${millionUSD} | ${thousandUSD}`;
+    };
+
+    const formatBarrelsPreview = (num) => {
+        if (!num || isNaN(num) || num < 0) return '';
+        const parsed = parseFloat(num);
+        const fullBBL = parsed.toLocaleString('id-ID') + ' BBL';
+        const thousandBBL = (parsed / 1000).toFixed(2) + ' Mbbl (Ribuan BBL)';
+        const millionBBL = (parsed / 1000000).toFixed(2) + ' MMbbl (Jutaan BBL)';
+        return `Interpretasi: ${fullBBL} | ${thousandBBL} | ${millionBBL}`;
+    };
+
+    const prodInput = document.getElementById('cf_production');
+    const prodPreview = document.getElementById('production_preview');
+    const priceInput = document.getElementById('cf_price');
+    const pricePreview = document.getElementById('price_preview');
+    const opexInput = document.getElementById('cf_opex');
+    const opexPreview = document.getElementById('opex_preview');
+
+    const updatePreviews = () => {
+        if (prodInput && prodPreview) prodPreview.textContent = formatBarrelsPreview(prodInput.value);
+        if (priceInput && pricePreview) pricePreview.textContent = formatCurrencyPreview(priceInput.value);
+        if (opexInput && opexPreview) opexPreview.textContent = formatCurrencyPreview(opexInput.value);
+    };
+
+    if (prodInput) {
+        prodInput.addEventListener('input', () => {
+            prodPreview.textContent = formatBarrelsPreview(prodInput.value);
+        });
+    }
+    if (priceInput) {
+        priceInput.addEventListener('input', () => {
+            pricePreview.textContent = formatCurrencyPreview(priceInput.value);
+        });
+    }
+    if (opexInput) {
+        opexInput.addEventListener('input', () => {
+            opexPreview.textContent = formatCurrencyPreview(opexInput.value);
+        });
+    }
+
+    updatePreviews();
+});
+</script>
 </body>
 </html>

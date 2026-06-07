@@ -26,10 +26,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $price_per_barrel = trim($_POST['price_per_barrel']);
     $opex = trim($_POST['opex']);
 
-    if(empty($year)) $validation_errors['year'] = "Tahun wajib diisi.";
-    if(empty($production)) $validation_errors['production'] = "Volume produksi wajib diisi.";
-    if(empty($price_per_barrel)) $validation_errors['price_per_barrel'] = "Harga per barel wajib diisi.";
-    if(empty($opex)) $validation_errors['opex'] = "OPEX wajib diisi.";
+    if(empty($year) || !is_numeric($year) || $year <= 0 || intval($year) != $year) {
+        $validation_errors['year'] = "Tahun wajib diisi dengan bilangan bulat positif lebih besar dari 0.";
+    }
+    if(empty($production) || !is_numeric($production) || $production <= 0) {
+        $validation_errors['production'] = "Volume produksi wajib diisi dengan angka positif lebih besar dari 0.";
+    }
+    if(empty($price_per_barrel) || !is_numeric($price_per_barrel) || $price_per_barrel <= 0) {
+        $validation_errors['price_per_barrel'] = "Harga per barel wajib diisi dengan angka positif lebih besar dari 0.";
+    }
+    if(empty($opex) || !is_numeric($opex) || $opex <= 0) {
+        $validation_errors['opex'] = "OPEX wajib diisi dengan angka positif lebih besar dari 0.";
+    }
 
     if (empty($validation_errors)) {
         // Rumus Keekonomian Migas Terintegrasi
@@ -87,19 +95,26 @@ require_once "../../includes/header.php";
         <form action="" method="POST" class="space-y-4">
             <div>
                 <label class="block text-xs font-bold text-slate-400 mb-2">Tahun Ke-</label>
-                <input type="number" name="year" placeholder="Contoh: 1" value="<?php echo htmlspecialchars($year); ?>" class="w-full p-3 bg-slate-950 border border-slate-800 rounded-xl text-sm text-white focus:outline-none">
+                <input type="number" min="1" step="1" required name="year" placeholder="Contoh: 1" value="<?php echo htmlspecialchars($year); ?>" class="w-full p-3 bg-slate-950 border border-slate-800 rounded-xl text-sm text-white focus:outline-none focus:border-emerald-500/50 transition-colors">
+                <p class="text-rose-400 text-xs mt-1"><?php echo $validation_errors['year'] ?? ''; ?></p>
             </div>
             <div>
-                <label class="block text-xs font-bold text-slate-400 mb-2">Volume Produksi Minyak Mentah (BBL / Tahun)</label>
-                <input type="number" name="production" placeholder="Contoh: 150000" value="<?php echo htmlspecialchars($production); ?>" class="w-full p-3 bg-slate-950 border border-slate-800 rounded-xl text-sm text-white focus:outline-none">
+                <label class="block text-xs font-bold text-slate-400 mb-2">Volume Produksi Minyak Mentah (BBL atau Mbbl)</label>
+                <input type="number" id="cf_production" min="0.01" step="any" required name="production" placeholder="Contoh: 150000" value="<?php echo htmlspecialchars($production); ?>" class="w-full p-3 bg-slate-950 border border-slate-800 rounded-xl text-sm text-white focus:outline-none focus:border-emerald-500/50 transition-colors">
+                <p id="production_preview" class="text-[10px] text-emerald-400 mt-1 italic"></p>
+                <p class="text-rose-400 text-xs mt-1"><?php echo $validation_errors['production'] ?? ''; ?></p>
             </div>
             <div>
                 <label class="block text-xs font-bold text-slate-400 mb-2">Harga Minyak Mentah (USD / BBL)</label>
-                <input type="number" step="any" name="price_per_barrel" placeholder="Contoh: 75.50" value="<?php echo htmlspecialchars($price_per_barrel); ?>" class="w-full p-3 bg-slate-950 border border-slate-800 rounded-xl text-sm text-white focus:outline-none">
+                <input type="number" id="cf_price" min="0.01" step="any" required name="price_per_barrel" placeholder="Contoh: 75.50" value="<?php echo htmlspecialchars($price_per_barrel); ?>" class="w-full p-3 bg-slate-950 border border-slate-800 rounded-xl text-sm text-white focus:outline-none focus:border-emerald-500/50 transition-colors">
+                <p id="price_preview" class="text-[10px] text-emerald-400 mt-1 italic"></p>
+                <p class="text-rose-400 text-xs mt-1"><?php echo $validation_errors['price_per_barrel'] ?? ''; ?></p>
             </div>
             <div>
-                <label class="block text-xs font-bold text-slate-400 mb-2">Biaya Operasional Lapangan (OPEX - USD)</label>
-                <input type="number" name="opex" placeholder="Contoh: 2000000" value="<?php echo htmlspecialchars($opex); ?>" class="w-full p-3 bg-slate-950 border border-slate-800 rounded-xl text-sm text-white focus:outline-none">
+                <label class="block text-xs font-bold text-slate-400 mb-2">Biaya Operasional Lapangan (OPEX - USD atau M USD)</label>
+                <input type="number" id="cf_opex" min="0.01" step="any" required name="opex" placeholder="Contoh: 2000000" value="<?php echo htmlspecialchars($opex); ?>" class="w-full p-3 bg-slate-950 border border-slate-800 rounded-xl text-sm text-white focus:outline-none focus:border-emerald-500/50 transition-colors">
+                <p id="opex_preview" class="text-[10px] text-emerald-400 mt-1 italic"></p>
+                <p class="text-rose-400 text-xs mt-1"><?php echo $validation_errors['opex'] ?? ''; ?></p>
             </div>
             <div class="flex justify-end gap-3 pt-4 border-t border-slate-800">
                 <a href="../projects/project-details.php?id=<?php echo $project_id; ?>" class="bg-slate-800 text-slate-300 py-2.5 px-5 rounded-xl text-xs font-bold">Batal</a>
@@ -109,5 +124,58 @@ require_once "../../includes/header.php";
             </div>
         </main>
     </div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const formatCurrencyPreview = (num) => {
+        if (!num || isNaN(num) || num < 0) return '';
+        const parsed = parseFloat(num);
+        const fullUSD = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(parsed);
+        const millionUSD = (parsed / 1000000).toFixed(2) + ' Juta USD';
+        const thousandUSD = (parsed / 1000).toFixed(2) + ' M USD (Ribuan)';
+        return `Interpretasi: ${fullUSD} | ${millionUSD} | ${thousandUSD}`;
+    };
+
+    const formatBarrelsPreview = (num) => {
+        if (!num || isNaN(num) || num < 0) return '';
+        const parsed = parseFloat(num);
+        const fullBBL = parsed.toLocaleString('id-ID') + ' BBL';
+        const thousandBBL = (parsed / 1000).toFixed(2) + ' Mbbl (Ribuan BBL)';
+        const millionBBL = (parsed / 1000000).toFixed(2) + ' MMbbl (Jutaan BBL)';
+        return `Interpretasi: ${fullBBL} | ${thousandBBL} | ${millionBBL}`;
+    };
+
+    const prodInput = document.getElementById('cf_production');
+    const prodPreview = document.getElementById('production_preview');
+    const priceInput = document.getElementById('cf_price');
+    const pricePreview = document.getElementById('price_preview');
+    const opexInput = document.getElementById('cf_opex');
+    const opexPreview = document.getElementById('opex_preview');
+
+    const updatePreviews = () => {
+        if (prodInput && prodPreview) prodPreview.textContent = formatBarrelsPreview(prodInput.value);
+        if (priceInput && pricePreview) pricePreview.textContent = formatCurrencyPreview(priceInput.value);
+        if (opexInput && opexPreview) opexPreview.textContent = formatCurrencyPreview(opexInput.value);
+    };
+
+    if (prodInput) {
+        prodInput.addEventListener('input', () => {
+            prodPreview.textContent = formatBarrelsPreview(prodInput.value);
+        });
+    }
+    if (priceInput) {
+        priceInput.addEventListener('input', () => {
+            pricePreview.textContent = formatCurrencyPreview(priceInput.value);
+        });
+    }
+    if (opexInput) {
+        opexInput.addEventListener('input', () => {
+            opexPreview.textContent = formatCurrencyPreview(opexInput.value);
+        });
+    }
+
+    updatePreviews();
+});
+</script>
 </body>
 </html>

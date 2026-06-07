@@ -19,12 +19,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     if (empty($name)) $validation_errors['name'] = "Nama proyek wajib diisi.";
     if (empty($site_manager)) $validation_errors['site_manager'] = "Nama manajer wajib diisi.";
-    if (!is_numeric($invest_capital)) $validation_errors['invest_capital'] = "Nilai CAPEX harus angka.";
-    if (!is_numeric($invest_noncapital)) $validation_errors['invest_noncapital'] = "Nilai Non-CAPEX harus angka.";
-    if (!is_numeric($tax)) $validation_errors['tax'] = "Pajak harus angka.";
-    if (!is_numeric($investment_years)) $validation_errors['investment_years'] = "Jumlah tahun investasi harus angka.";
+    if (!is_numeric($invest_capital) || $invest_capital <= 0) $validation_errors['invest_capital'] = "Nilai CAPEX harus angka positif lebih besar dari 0.";
+    if (!is_numeric($invest_noncapital) || $invest_noncapital < 0) $validation_errors['invest_noncapital'] = "Nilai Non-CAPEX harus angka positif minimal 0.";
+    if (!is_numeric($tax) || $tax < 0 || $tax > 100) $validation_errors['tax'] = "Pajak harus berupa angka antara 0% sampai 100%.";
+    if (!is_numeric($investment_years) || $investment_years <= 0 || intval($investment_years) != $investment_years) $validation_errors['investment_years'] = "Durasi proyek harus berupa bilangan bulat positif lebih besar dari 0.";
     if (empty($depreciation_method)) $validation_errors['depreciation_method'] = "Pilih metode depresiasi.";
-    if (!is_numeric($decline_rate)) $validation_errors['decline_rate'] = "Decline rate harus angka.";
+    if (!is_numeric($decline_rate) || $decline_rate < 0 || $decline_rate > 100) $validation_errors['decline_rate'] = "Decline rate harus berupa angka antara 0% sampai 100%.";
 
     if (empty($validation_errors)) {
         $sql = "INSERT INTO projects (name, site_manager, invest_capital, invest_noncapital, tax, investment_years, depreciation, depreciation_method, decline_rate, user_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?, ?, NOW(), NOW())";
@@ -73,34 +73,36 @@ require_once "../../includes/header.php";
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-slate-400 mb-2">Capital Investment (CAPEX - USD)</label>
-                    <input type="number" name="invest_capital" value="<?php echo htmlspecialchars($invest_capital); ?>" class="w-full p-3 bg-slate-950 border border-slate-800 rounded-xl text-sm text-white focus:outline-none">
+                    <input type="number" id="invest_capital" name="invest_capital" min="0.01" step="any" required value="<?php echo htmlspecialchars($invest_capital); ?>" class="w-full p-3 bg-slate-950 border border-slate-800 rounded-xl text-sm text-white focus:outline-none focus:border-emerald-500/50 transition-colors">
+                    <p id="invest_capital_preview" class="text-[10px] text-emerald-400 mt-1 italic"></p>
                     <p class="text-rose-400 text-xs mt-1"><?php echo $validation_errors['invest_capital'] ?? ''; ?></p>
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-slate-400 mb-2">Non-Capital Investment (USD)</label>
-                    <input type="number" name="invest_noncapital" value="<?php echo htmlspecialchars($invest_noncapital); ?>" class="w-full p-3 bg-slate-950 border border-slate-800 rounded-xl text-sm text-white focus:outline-none">
+                    <input type="number" id="invest_noncapital" name="invest_noncapital" min="0" step="any" required value="<?php echo htmlspecialchars($invest_noncapital); ?>" class="w-full p-3 bg-slate-950 border border-slate-800 rounded-xl text-sm text-white focus:outline-none focus:border-emerald-500/50 transition-colors">
+                    <p id="invest_noncapital_preview" class="text-[10px] text-emerald-400 mt-1 italic"></p>
                     <p class="text-rose-400 text-xs mt-1"><?php echo $validation_errors['invest_noncapital'] ?? ''; ?></p>
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-slate-400 mb-2">Pajak Korporasi (%)</label>
-                    <input type="number" step="any" name="tax" value="<?php echo htmlspecialchars($tax); ?>" class="w-full p-3 bg-slate-950 border border-slate-800 rounded-xl text-sm text-white focus:outline-none">
+                    <input type="number" step="any" min="0" max="100" required name="tax" value="<?php echo htmlspecialchars($tax); ?>" class="w-full p-3 bg-slate-950 border border-slate-800 rounded-xl text-sm text-white focus:outline-none focus:border-emerald-500/50 transition-colors">
                     <p class="text-rose-400 text-xs mt-1"><?php echo $validation_errors['tax'] ?? ''; ?></p>
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-slate-400 mb-2">Durasi Proyek (Tahun)</label>
-                    <input type="number" name="investment_years" value="<?php echo htmlspecialchars($investment_years); ?>" class="w-full p-3 bg-slate-950 border border-slate-800 rounded-xl text-sm text-white focus:outline-none">
+                    <input type="number" min="1" step="1" required name="investment_years" value="<?php echo htmlspecialchars($investment_years); ?>" class="w-full p-3 bg-slate-950 border border-slate-800 rounded-xl text-sm text-white focus:outline-none focus:border-emerald-500/50 transition-colors">
                     <p class="text-rose-400 text-xs mt-1"><?php echo $validation_errors['investment_years'] ?? ''; ?></p>
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-slate-400 mb-2">Metode Depresiasi</label>
-                    <select name="depreciation_method" class="w-full p-3 bg-slate-950 border border-slate-800 rounded-xl text-sm text-white focus:outline-none">
+                    <select name="depreciation_method" class="w-full p-3 bg-slate-950 border border-slate-800 rounded-xl text-sm text-white focus:outline-none focus:border-emerald-500/50 transition-colors">
                         <option value="Straight Line">Straight Line Method</option>
                         <option value="Double Declining">Double Declining Balance Method</option>
                     </select>
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-slate-400 mb-2">Decline Rate (% / Tahun)</label>
-                    <input type="number" step="any" name="decline_rate" value="<?php echo htmlspecialchars($decline_rate); ?>" class="w-full p-3 bg-slate-950 border border-slate-800 rounded-xl text-sm text-white focus:outline-none">
+                    <input type="number" step="any" min="0" max="100" required name="decline_rate" value="<?php echo htmlspecialchars($decline_rate); ?>" class="w-full p-3 bg-slate-950 border border-slate-800 rounded-xl text-sm text-white focus:outline-none focus:border-emerald-500/50 transition-colors">
                     <p class="text-rose-400 text-xs mt-1"><?php echo $validation_errors['decline_rate'] ?? ''; ?></p>
                 </div>
             </div>
@@ -112,5 +114,37 @@ require_once "../../includes/header.php";
             </div>
         </main>
     </div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const formatCurrencyPreview = (num) => {
+        if (!num || isNaN(num) || num < 0) return '';
+        const parsed = parseFloat(num);
+        const fullUSD = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(parsed);
+        const millionUSD = (parsed / 1000000).toFixed(2) + ' Juta USD';
+        const thousandUSD = (parsed / 1000).toFixed(2) + ' M USD (Ribuan)';
+        return `Interpretasi: ${fullUSD} | ${millionUSD} | ${thousandUSD}`;
+    };
+
+    const capexInput = document.getElementById('invest_capital');
+    const capexPreview = document.getElementById('invest_capital_preview');
+    const nonCapexInput = document.getElementById('invest_noncapital');
+    const nonCapexPreview = document.getElementById('invest_noncapital_preview');
+
+    const updatePreviews = () => {
+        capexPreview.textContent = formatCurrencyPreview(capexInput.value);
+        nonCapexPreview.textContent = formatCurrencyPreview(nonCapexInput.value);
+    };
+
+    capexInput.addEventListener('input', () => {
+        capexPreview.textContent = formatCurrencyPreview(capexInput.value);
+    });
+    nonCapexInput.addEventListener('input', () => {
+        nonCapexPreview.textContent = formatCurrencyPreview(nonCapexInput.value);
+    });
+
+    updatePreviews();
+});
+</script>
 </body>
 </html>
