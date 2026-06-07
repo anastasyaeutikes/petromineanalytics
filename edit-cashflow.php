@@ -71,8 +71,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>body { font-family: 'Plus Jakarta Sans', sans-serif; }</style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen p-6">
-    <div class="max-w-xl mx-auto bg-slate-900 border border-slate-800 rounded-2xl p-8 shadow-2xl">
+<body class="bg-slate-950 text-slate-100 min-h-screen flex items-center justify-center p-6">
+    <div class="w-full max-w-xl bg-slate-900 border border-slate-800 rounded-2xl p-8 shadow-2xl">
 
         <!-- Header -->
         <div class="mb-6">
