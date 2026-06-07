@@ -96,7 +96,7 @@ require_once "../../includes/header.php";
                 </div>
             </div>
             <div class="flex justify-between items-center pt-4 border-t border-slate-800">
-                <a href="delete-project.php?id=<?php echo $project_id; ?>" onclick="return confirm('Hapus seluruh berkas proyek secara permanen?')" class="text-xs text-rose-400 font-bold hover:underline"><i class="fas fa-trash-alt mr-1"></i> Hapus Seluruh Proyek</a>
+                <button type="button" onclick="document.getElementById('delete-project-modal').classList.remove('hidden')" class="text-xs text-rose-400 font-bold hover:underline bg-transparent border-0 cursor-pointer flex items-center"><i class="fas fa-trash-alt mr-1"></i> Hapus Seluruh Proyek</button>
                 <div class="flex gap-2">
                     <a href="project-details.php?id=<?php echo $project_id; ?>" class="bg-slate-800 text-slate-300 py-2 px-4 rounded-xl text-xs font-bold">Batal</a>
                     <button type="submit" class="bg-emerald-500 text-slate-950 py-2 px-4 rounded-xl text-xs font-bold">Simpan Perubahan</button>
@@ -106,5 +106,61 @@ require_once "../../includes/header.php";
             </div>
         </main>
     </div>
+
+<!-- MODAL: Konfirmasi Hapus Proyek dengan Proteksi Ganda -->
+<div id="delete-project-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm px-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 max-w-sm w-full shadow-2xl">
+        <div class="w-12 h-12 bg-rose-500/15 border border-rose-500/30 rounded-xl flex items-center justify-center mx-auto mb-4">
+            <i class="fas fa-exclamation-triangle text-rose-400 text-lg"></i>
+        </div>
+        <h3 class="text-sm font-bold text-white text-center mb-1">Hapus Seluruh Proyek?</h3>
+        <p class="text-xs text-slate-400 text-center mb-4">Seluruh data lapangan, parameter, dan tabel cashflow proyek <strong><?php echo htmlspecialchars($project['name'] ?? ''); ?></strong> akan dihapus secara permanen.</p>
+        
+        <div class="mb-5">
+            <label class="block text-[10px] font-bold text-slate-400 mb-1.5 uppercase tracking-wider">Ketik nama proyek untuk konfirmasi:</label>
+            <p class="text-[11px] text-slate-500 mb-2 italic bg-slate-950 p-2 rounded-lg border border-slate-800 select-all text-center"><?php echo htmlspecialchars($project['name'] ?? ''); ?></p>
+            <input type="text" id="confirm-project-name" placeholder="Ketik nama proyek di sini..." class="w-full p-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-rose-500 transition-colors">
+        </div>
+
+        <div class="flex gap-3">
+            <button type="button" onclick="document.getElementById('delete-project-modal').classList.add('hidden')"
+                class="flex-1 px-4 py-2.5 bg-slate-800 border border-slate-700 text-slate-300 hover:text-white font-semibold text-xs rounded-xl transition-all">
+                Batal
+            </button>
+            <a id="confirm-delete-project-btn" href="delete-project.php?id=<?php echo $project_id; ?>"
+                class="flex-1 text-center px-4 py-2.5 bg-rose-500/50 text-white/50 font-bold text-xs rounded-xl transition-all flex items-center justify-center pointer-events-none cursor-not-allowed">
+                <i class="fas fa-trash-alt mr-1.5"></i>Ya, Hapus
+            </a>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const confirmInput = document.getElementById('confirm-project-name');
+    const deleteBtn = document.getElementById('confirm-delete-project-btn');
+    const projectName = <?php echo json_encode($project['name'] ?? ''); ?>;
+
+    confirmInput.addEventListener('input', function() {
+        if (confirmInput.value.trim() === projectName) {
+            deleteBtn.classList.remove('bg-rose-500/50', 'text-white/50', 'pointer-events-none', 'cursor-not-allowed');
+            deleteBtn.classList.add('bg-rose-500', 'hover:bg-rose-600', 'text-white');
+        } else {
+            deleteBtn.classList.remove('bg-rose-500', 'hover:bg-rose-600', 'text-white');
+            deleteBtn.classList.add('bg-rose-500/50', 'text-white/50', 'pointer-events-none', 'cursor-not-allowed');
+        }
+    });
+
+    // Tutup modal hapus jika klik backdrop
+    document.getElementById('delete-project-modal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            this.classList.add('hidden');
+            confirmInput.value = '';
+            deleteBtn.classList.remove('bg-rose-500', 'hover:bg-rose-600', 'text-white');
+            deleteBtn.classList.add('bg-rose-500/50', 'text-white/50', 'pointer-events-none', 'cursor-not-allowed');
+        }
+    });
+});
+</script>
 </body>
 </html>

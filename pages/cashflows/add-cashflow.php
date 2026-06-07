@@ -67,6 +67,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <?php
 $base_path = "../../";
 $page_title = "Input Cashflow Tahunan - " . htmlspecialchars($project_details['name'] ?? '');
+require_once "../../includes/header.php";
+?>
 <body class="bg-slate-950 text-slate-100 min-h-screen flex">
     <?php require_once "../../includes/sidebar.php"; ?>
     <div class="flex-1 flex flex-col min-w-0">

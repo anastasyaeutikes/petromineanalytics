@@ -313,11 +313,11 @@ require_once "../../includes/header.php";
                                             <a href="../cashflows/edit-cashflow.php?id=<?php echo $row['id']; ?>" class="text-blue-400 hover:text-blue-300 p-1" title="Edit Data Tahun <?php echo $row['year']; ?>">
                                                 <i class="fas fa-edit"></i>
                                             </a>
-                                            <a href="../cashflows/delete-cashflow.php?id=<?php echo $row['id']; ?>&project_id=<?php echo $project_id; ?>"
-                                               onclick="return confirm('Apakah Anda yakin ingin menghapus data cashflow Tahun <?php echo $row['year']; ?>?');"
-                                               class="text-rose-400 hover:text-rose-300 p-1" title="Hapus Data Tahun <?php echo $row['year']; ?>">
-                                                <i class="fas fa-trash"></i>
-                                            </a>
+                                            <button type="button"
+                                                onclick="openDeleteCashflowModal(<?php echo $row['id']; ?>, <?php echo $row['year']; ?>, <?php echo $project_id; ?>)"
+                                                class="text-rose-400 hover:text-rose-300 p-1 bg-transparent border-0 cursor-pointer" title="Hapus Data Tahun <?php echo $row['year']; ?>">
+                                                 <i class="fas fa-trash"></i>
+                                             </button>
                                         </div>
                                     <?php elseif ($row['year'] > 0 && empty($row['id'])): ?>
                                         <a href="../cashflows/add-cashflow.php?project_id=<?php echo $project_id; ?>&year=<?php echo $row['year']; ?>" class="text-emerald-500 hover:underline text-[10px]">
@@ -890,6 +890,39 @@ require_once "../../includes/header.php";
             const fileName = 'Keekonomian_' + safeName + '_' + new Date().toISOString().slice(0,10) + '.xlsx';
             XLSX.writeFile(wb, fileName);
         }
+
+        // Fungsi membuka modal hapus cashflow
+        function openDeleteCashflowModal(id, year, projectId) {
+            document.getElementById('delete-cf-year').textContent = year;
+            document.getElementById('confirm-delete-cf-btn').href = `../cashflows/delete-cashflow.php?id=${id}&project_id=${projectId}`;
+            document.getElementById('delete-cashflow-modal').classList.remove('hidden');
+        }
+
+        // Tutup modal hapus jika klik backdrop
+        document.getElementById('delete-cashflow-modal').addEventListener('click', function(e) {
+            if (e.target === this) this.classList.add('hidden');
+        });
     </script>
+
+<!-- MODAL: Konfirmasi Hapus Cashflow -->
+<div id="delete-cashflow-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm px-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 max-w-sm w-full shadow-2xl">
+        <div class="w-12 h-12 bg-rose-500/15 border border-rose-500/30 rounded-xl flex items-center justify-center mx-auto mb-4">
+            <i class="fas fa-exclamation-triangle text-rose-400 text-lg"></i>
+        </div>
+        <h3 class="text-sm font-bold text-white text-center mb-1">Hapus Data Cashflow?</h3>
+        <p class="text-xs text-slate-400 text-center mb-6">Data cashflow untuk <strong class="text-white">Tahun <span id="delete-cf-year"></span></strong> pada proyek ini akan dihapus secara permanen.</p>
+        <div class="flex gap-3">
+            <button type="button" onclick="document.getElementById('delete-cashflow-modal').classList.add('hidden')"
+                class="flex-1 px-4 py-2.5 bg-slate-800 border border-slate-700 text-slate-300 hover:text-white font-semibold text-xs rounded-xl transition-all">
+                Batal
+            </button>
+            <a id="confirm-delete-cf-btn" href="#"
+                class="flex-1 text-center px-4 py-2.5 bg-rose-500 hover:bg-rose-600 text-white font-bold text-xs rounded-xl transition-all flex items-center justify-center">
+                <i class="fas fa-trash-alt mr-1.5"></i>Ya, Hapus
+            </a>
+        </div>
+    </div>
+</div>
 </body>
 </html>
