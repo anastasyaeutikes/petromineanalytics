@@ -62,7 +62,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <div class="w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl p-8">
         <div class="text-center mb-6">
             <div class="w-12 h-12 bg-emerald-500/10 text-emerald-400 rounded-xl flex items-center justify-center text-xl mx-auto mb-4 border border-emerald-500/20"><i class="fas fa-user-plus"></i></div>
-            <h1 class="text-2xl font-bold text-white">Buat Akun Baru</h1>
+            <h1 class="text-2xl font-bold text-white">Register</h1>
             <p class="text-xs text-slate-400 mt-1">Platform Manajemen Lapangan Migas</p>
         </div>
         <?php if(!empty($error_message)): ?>
@@ -71,17 +71,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <form action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>" method="POST" class="space-y-4">
             <div>
                 <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Nama Lengkap</label>
-                <input type="text" name="name" value="<?php echo htmlspecialchars($name); ?>" class="w-full px-4 py-3 bg-slate-950 border <?php echo (!empty($name_err)) ? 'border-rose-500' : 'border-slate-800'; ?> rounded-xl text-sm text-white focus:outline-none focus:border-emerald-500">
+                <input type="text" name="name" value="<?php echo htmlspecialchars($name); ?>" class="w-full px-4 py-3 bg-slate-950 border <?php echo (!empty($name_err)) ? 'border-rose-500' : 'border-slate-800'; ?> rounded-xl text-sm text-white focus:outline-none focus:border-emerald-500" placeholder="Nama Lengkap Anda">
                 <p class="text-rose-400 text-xs mt-1"><?php echo $name_err; ?></p>
             </div>
             <div>
                 <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Alamat Email</label>
-                <input type="email" name="email" value="<?php echo htmlspecialchars($email); ?>" class="w-full px-4 py-3 bg-slate-950 border <?php echo (!empty($email_err)) ? 'border-rose-500' : 'border-slate-800'; ?> rounded-xl text-sm text-white focus:outline-none focus:border-emerald-500">
+                <input type="email" name="email" value="<?php echo htmlspecialchars($email); ?>" class="w-full px-4 py-3 bg-slate-950 border <?php echo (!empty($email_err)) ? 'border-rose-500' : 'border-slate-800'; ?> rounded-xl text-sm text-white focus:outline-none focus:border-emerald-500" placeholder="nama@perusahaan.com">
                 <p class="text-rose-400 text-xs mt-1"><?php echo $email_err; ?></p>
             </div>
             <div>
                 <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Password</label>
-                <input type="password" name="password" class="w-full px-4 py-3 bg-slate-950 border <?php echo (!empty($password_err)) ? 'border-rose-500' : 'border-slate-800'; ?> rounded-xl text-sm text-white focus:outline-none focus:border-emerald-500">
+                <input type="password" name="password" class="w-full px-4 py-3 bg-slate-950 border <?php echo (!empty($password_err)) ? 'border-rose-500' : 'border-slate-800'; ?> rounded-xl text-sm text-white focus:outline-none focus:border-emerald-500" placeholder="Password Anda">
                 <p class="text-rose-400 text-xs mt-1"><?php echo $password_err; ?></p>
             </div>
             <button type="submit" class="w-full bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold py-3 rounded-xl shadow-lg text-sm transition-all"><i class="fas fa-check-circle mr-1"></i>Registrasi</button>

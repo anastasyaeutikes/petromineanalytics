@@ -223,7 +223,7 @@ $has_photo    = !empty($user['profile_photo']) && file_exists($user['profile_pho
 
         <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 mb-6">
             <h2 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-5 flex items-center gap-2">
-                <i class="fas fa-id-card text-emerald-400"></i> Data Diri
+                <i class="fas fa-id-card text-emerald-400"></i> Informasi Pribadi 
             </h2>
             <div class="space-y-4">
 

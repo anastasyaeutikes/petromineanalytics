@@ -105,7 +105,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
             <div class="w-12 h-12 bg-emerald-500/10 text-emerald-400 rounded-xl flex items-center justify-center text-xl mx-auto mb-4 border border-emerald-500/20">
                 <i class="fas fa-shield-halved"></i>
             </div>
-            <h1 class="text-2xl font-bold text-white">Otentikasi Masuk</h1>
+            <h1 class="text-2xl font-bold text-white">Login</h1>
             <p class="text-xs text-slate-400 mt-1">Platform Manajemen Lapangan Migas.</p>
         </div>
 
